@@ -7,7 +7,7 @@ Nektere promene je treba doplnit na zaklade faktickeho
 stavu z Flexibee. Napriklad doplnit typy faktur.
 """
 
-from backports.configparser import ConfigParser, NoSectionError
+from configparser import ConfigParser, NoSectionError
 from pkg_resources import Requirement, resource_filename
 import codecs
 
@@ -24,7 +24,7 @@ class Config(object):
 		# Open the file with the correct encoding	
 		try:
 			with codecs.open(filename, 'r', encoding='utf-8') as f:
-				self.conf.readfp(f)
+				self.conf.read_file(f)
 		except IOError:
 			raise ValueError('Konfiguracni soubor '+config_name+' neexistuje nebo jste uvedli spatnou cestu.')		
 
