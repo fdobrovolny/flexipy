@@ -3,8 +3,8 @@
 import requests
 import json
 from .exceptions import FlexipyException
-from main import Flexipy
-from config import Config
+from .main import Flexipy
+from .config import Config
 
 
 class Adresar(Flexipy):

@@ -3,7 +3,7 @@
 import requests
 import json
 from .exceptions import FlexipyException
-import config
+from . import config
 
 import re
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from .exceptions import FlexipyException
-from main import Flexipy
-from config import Config
+from .main import Flexipy
+from .config import Config
 
 class Pokladna(Flexipy):
 
