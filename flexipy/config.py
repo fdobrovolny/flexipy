@@ -7,7 +7,7 @@ Nektere promene je treba doplnit na zaklade faktickeho
 stavu z Flexibee. Napriklad doplnit typy faktur.
 """
 
-import ConfigParser
+from configparser import ConfigParser, NoSectionError
 from pkg_resources import Requirement, resource_filename
 import codecs
 
@@ -18,13 +18,13 @@ class Config(object):
 	"""
 
 	def __init__(self, config_name="flexipy/flexipy.conf"):
-		self.conf = ConfigParser.SafeConfigParser()
+		self.conf = ConfigParser()
 		#use resource management api to find flexipy.conf, see docs
 		filename = resource_filename(Requirement.parse("flexipy"), config_name)
 		# Open the file with the correct encoding	
 		try:
 			with codecs.open(filename, 'r', encoding='utf-8') as f:
-				self.conf.readfp(f)
+				self.conf.read_file(f)
 		except IOError:
 			raise ValueError('Konfiguracni soubor '+config_name+' neexistuje nebo jste uvedli spatnou cestu.')		
 
@@ -38,7 +38,7 @@ class Config(object):
 			section_content = self.conf.items(section_name)
 			for key, val in section_content:
 				result_list.append(val)
-		except ConfigParser.NoSectionError:
+		except NoSectionError:
 			raise ValueError("Config file neobsahuje sekci "+section_name)		
 		return result_list
 
@@ -51,7 +51,7 @@ class Config(object):
 			section_content = self.conf.items("server")
 			for key, val in section_content:
 				result[key]=val			
-		except ConfigParser.NoSectionError:
+		except NoSectionError:
 			raise ValueError("Config file neobsahuje sekci server")		
 		return result
 
