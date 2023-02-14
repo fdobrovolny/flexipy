@@ -10,9 +10,10 @@ from paver.path25 import path, pushd
 
 options(
     sphinx=Bunch(
-        builddir='_build',
+        builddir="_build",
     )
 )
+
 
 def read_requirements(filename):
     """
@@ -21,14 +22,10 @@ def read_requirements(filename):
     """
     strip_whitespace = partial(map, str.strip)
     remove_empty_lines = partial(filter, None)
-    strip_comments = partial(filter, lambda line: not line.startswith('#'))
-    return (
-        '\n'.join(
-        sorted(
-        strip_comments(
-        remove_empty_lines(
-        strip_whitespace(
-        open(filename)))))))
+    strip_comments = partial(filter, lambda line: not line.startswith("#"))
+    return "\n".join(
+        sorted(strip_comments(remove_empty_lines(strip_whitespace(open(filename)))))
+    )
 
 
 @task
@@ -38,34 +35,38 @@ def install_dependencies():
 
     Only install if the requirements file changed.
     """
-    requirements_file = 'requirements.txt'
-    installed_file = 'requirements.installed'
+    requirements_file = "requirements.txt"
+    installed_file = "requirements.installed"
     requirements = read_requirements(requirements_file)
     installed = os.path.exists(installed_file) and open(installed_file).read()
     if installed == requirements:
-        print ('Nothing new to install. Delete %s if you want to try anyway' %
-            installed_file)
+        print(
+            "Nothing new to install. Delete %s if you want to try anyway"
+            % installed_file
+        )
     else:
-        sh('pip install -r ' + requirements_file)
+        sh("pip install -r " + requirements_file)
 
         # remember what was installed
-        with open(installed_file, 'w+') as f:
+        with open(installed_file, "w+") as f:
             f.write(requirements)
-    
+
 
 @task
 def delete_pyc():
     """
     Delete all *.pyc files recursively from this directory.
     """
-    for file in path('.').walkfiles('*.pyc'):
+    for file in path(".").walkfiles("*.pyc"):
         file.remove()
+
 
 @task
 def build_docs():
     doctools.doc_clean()
     doctools.html()
 
+
 @task
 def test():
-    sh('py.test test_flexipy/')
+    sh("py.test test_flexipy/")
