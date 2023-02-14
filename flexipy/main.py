@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import requests
 import json
-from .exceptions import FlexipyException
-from . import config
-
 import re
+
+import requests
+
+from . import config
+from .exceptions import FlexipyException
 
 
 class Flexipy(object):
@@ -65,7 +66,9 @@ class Flexipy(object):
         winstrom = {"winstrom": {evidence: [data]}}
         return json.dumps(winstrom)
 
-    def get_all_records(self, evidence, query=None, detail="summary"):
+    def get_all_records(
+        self, evidence, query=None, detail="summary", limit=0, start=None,
+    ):
         """Vytvori a odesle pozadavek k ziskani vsech zaznamu z pozadovane evidence.
         Returns :list: contatining all records
 
@@ -73,17 +76,37 @@ class Flexipy(object):
         :param query: dotaz ktey filtruje zaznamy
         :param detail: uroven zobrazeni detailu(kolik polozek daneho zaznamu se vypise)
         defaultni hodnota je summary. Dalsi moznosi je id(vypise pouze id zaznamu) a full(kompletni vypis)
+        :param limit: Maximální počet záznamů na jedné stránce. None je 20. Deafultní hodnota 0 vrací všechny záznamy bez omezení.
+        :param start: Kolik záznamů přeskočit. Není závislé na parametru limit.
+
+        https://intercom.help/podpora-flexi/cs/articles/4722193-strankovani
         """
         re.sub(r"\s", "", evidence)  # remove all wihtespaces
-        if query == None:
+        if query is None:
             r = self.send_request(
-                method="get", endUrl=evidence + ".json?detail=" + detail
+                method="get",
+                endUrl=(
+                    evidence
+                    + ".json?detail="
+                    + detail
+                    + (f"&limit={limit}" if limit else "")
+                    + (f"&start={start}" if start else "")
+                ),
             )
         else:
             # pouzij query pro filtrovani
             # TODO: nejakym zpusobem zvaliduj query
             r = self.send_request(
-                method="get", endUrl=evidence + "/(" + query + ").json?detail=" + detail
+                method="get",
+                endUrl=(
+                    evidence
+                    + "/("
+                    + query
+                    + ").json?detail="
+                    + detail
+                    + (f"&limit={limit}" if limit else "")
+                    + (f"&start={start}" if start else "")
+                ),
             )
         return self.process_response(r, evidence)
 
