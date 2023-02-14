@@ -108,7 +108,7 @@ class Flexipy(object):
                     + (f"&start={start}" if start else "")
                 ),
             )
-        return self.process_response(r, evidence)
+        return self.process_response(r, evidence, force_list=True)
 
     def get_evidence_property_list(self, evidence):
         """Tato funkce vraci seznam polozek danne evidence. Tyto polozky jsou
@@ -130,19 +130,19 @@ class Flexipy(object):
             error_messages.append(error["message"])
         return error_messages
 
-    def process_response(self, response, evidence=None):
+    def process_response(self, response, evidence=None, force_list=False):
         """Pote co Flexibee vytvori novy zaznam v nejake evidenci, vrati
         odpoved obsahujici urcite informace. Tato funkce zpracuje odpoved a vratu
         jeji obsah jako dictionary.	Odstrani take nepotrebne casti.
         :param response: Response objekt vraceny z Flexibee
         """
-        if evidence == None:
+        if evidence is None:
             d = response.json()
             dictionary = d["winstrom"]
             return dictionary
         else:
             d = response.json()
-            if len(d["winstrom"][evidence]) == 1:
+            if len(d["winstrom"][evidence]) == 1 and not force_list:
                 dictionary = d["winstrom"][evidence][0]
                 return dictionary
             else:
