@@ -9,22 +9,24 @@ class Faktura(Flexipy):
     def __init__(self, conf=Config()):
         Flexipy.__init__(self, config=conf)
 
-    def get_all_vydane_faktury(self, query=None, detail="summary"):
+    def get_all_vydane_faktury(self, query=None, detail="summary", **kwargs):
         """Metoda vrati vsechny vydane faktury z Flexibee.
         :param query: Pokud je uveden dotaz ve formatu jaky podporuje
         Flexibee(viz dokumentace), vrati vyfiltrovane zaznamy na zaklade
         dotazu.
+        :param kwargs: extra arguments to get_all_records such as pagination
         """
-        d = self.get_all_records("faktura-vydana", query, detail)
+        d = self.get_all_records("faktura-vydana", query, detail, **kwargs)
         return d
 
-    def get_all_prijate_faktury(self, query=None, detail="summary"):
+    def get_all_prijate_faktury(self, query=None, detail="summary", **kwargs):
         """Metoda vrati vsechny prijate faktury z Flexibee.
         :param query: Pokud je uveden dotaz ve formatu jaky podporuje
         Flexibee(viz dokumentace), vrati vyfiltrovane zaznamy na zaklade
         dotazu.
+        :param kwargs: extra arguments to get_all_records such as pagination
         """
-        d = self.get_all_records("faktura-prijata", query, detail)
+        d = self.get_all_records("faktura-prijata", query, detail, **kwargs)
         return d
 
     def create_vydana_faktura(

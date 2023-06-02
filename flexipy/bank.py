@@ -47,13 +47,14 @@ class Banka(Flexipy):
                 b_item[k] = v
         return self.create_evidence_item("banka", b_item)
 
-    def get_all_bank_doklady(self, query=None, detail="summary"):
+    def get_all_bank_doklady(self, query=None, detail="summary", **kwargs):
         """Metoda vrati vsechny bankovni doklady z Flexibee.
         :param query: Pokud je uveden dotaz ve formatu jaky podporuje
         Flexibee(viz dokumentace), vrati vyfiltrovane zaznamy na zaklade
         dotazu.
+        :param kwargs: extra arguments to get_all_records such as pagination
         """
-        d = self.get_all_records("banka", query, detail)
+        d = self.get_all_records("banka", query, detail, **kwargs)
         return d
 
     def get_bank_doklad(self, id, detail="summary"):
