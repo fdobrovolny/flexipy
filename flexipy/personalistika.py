@@ -2,7 +2,6 @@ from flexipy.main import Flexipy
 
 
 class Personalistika(Flexipy):
-
     def get_all_osoby(self, query=None, detail="summary", **kwargs):
         """
         Metoda vrati vsechny osoby z Flexibee.

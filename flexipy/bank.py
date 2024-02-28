@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import requests
-import json
+
+from .config import Config
 from .exceptions import FlexipyException
 from .main import Flexipy
-from .config import Config
 
 
 class Banka(Flexipy):
@@ -56,6 +55,24 @@ class Banka(Flexipy):
         """
         d = self.get_all_records("banka", query, detail, **kwargs)
         return d
+
+    def get_all_bankovni_ucet(self, query=None, detail="summary", **kwargs):
+        """
+        Získá všechny záznamy bankovních účtů.
+
+        :param query: Volitelný dotaz pro filtrování záznamů (výchozí: None).
+        :param detail: Volitelná úroveň detailu pro získání (výchozí: "summary").
+        :param kwargs: Volitelné klíčové argumenty.
+        :return: Seznam záznamů bankovních účtů.
+        """
+        d = self.get_all_records("bankovni-ucet", query, detail, **kwargs)
+        return d
+
+    def get_bankovni_ucet(self, id, detail="summary"):
+        return self.get_evidence_item(id, "bankovni-ucet", detail)
+
+    def get_bankovni_ucet_by_code(self, code, detail="summary"):
+        return self.get_evidence_item_by_code(str(code), "bankovni-ucet", detail)
 
     def get_bank_doklad(self, id, detail="summary"):
         return self.get_evidence_item(id, "banka", detail)

@@ -67,7 +67,12 @@ class Flexipy(object):
         return json.dumps(winstrom)
 
     def get_all_records(
-        self, evidence, query=None, detail="summary", limit=0, start=None,
+        self,
+        evidence,
+        query=None,
+        detail="summary",
+        limit=0,
+        start=None,
     ):
         """Vytvori a odesle pozadavek k ziskani vsech zaznamu z pozadovane evidence.
         Returns :list: contatining all records

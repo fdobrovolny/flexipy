@@ -6,11 +6,12 @@ Je treba zde nastavit nektere parametry(viz dokumentace).
 Nektere promene je treba doplnit na zaklade faktickeho 
 stavu z Flexibee. Napriklad doplnit typy faktur.
 """
-import pathlib
-from configparser import ConfigParser, NoSectionError
-from pkg_resources import Requirement, resource_filename
 import codecs
 import os
+import pathlib
+from configparser import ConfigParser, NoSectionError
+
+from pkg_resources import Requirement, resource_filename
 
 
 class Config(object):
@@ -39,18 +40,18 @@ class Config(object):
                 + " neexistuje nebo jste uvedli spatnou cestu."
             )
 
-        if os.environ.get('FLEXIPY_USERNAME', None) is not None:
-            self.conf.set('server', 'username', os.environ.get('FLEXIPY_USERNAME'))
-        if os.environ.get('FLEXIPY_PASSWORD', None) is not None:
-            self.conf.set('server', 'password', os.environ.get('FLEXIPY_PASSWORD'))
-        if os.environ.get('FLEXIPY_HOST', None) is not None:
-            self.conf.set('server', 'host', os.environ.get('FLEXIPY_HOST'))
-        if os.environ.get('FLEXIPY_FIRMA', None) is not None:
-            self.conf.set('server', 'firma', os.environ.get('FLEXIPY_FIRMA'))
-        if os.environ.get('FLEXIPY_PROTOCOL', None) in ["http", "https"]:
-            self.conf.set('server', 'protocol', os.environ.get('FLEXIPY_PROTOCOL'))
-        if os.environ.get('FLEXIPY_SSL_VERIFY', None) in ["true", "false"]:
-            self.conf.set('server', 'verify', os.environ.get('FLEXIPY_SSL_VERIFY'))
+        if os.environ.get("FLEXIPY_USERNAME", None) is not None:
+            self.conf.set("server", "username", os.environ.get("FLEXIPY_USERNAME"))
+        if os.environ.get("FLEXIPY_PASSWORD", None) is not None:
+            self.conf.set("server", "password", os.environ.get("FLEXIPY_PASSWORD"))
+        if os.environ.get("FLEXIPY_HOST", None) is not None:
+            self.conf.set("server", "host", os.environ.get("FLEXIPY_HOST"))
+        if os.environ.get("FLEXIPY_FIRMA", None) is not None:
+            self.conf.set("server", "firma", os.environ.get("FLEXIPY_FIRMA"))
+        if os.environ.get("FLEXIPY_PROTOCOL", None) in ["http", "https"]:
+            self.conf.set("server", "protocol", os.environ.get("FLEXIPY_PROTOCOL"))
+        if os.environ.get("FLEXIPY_SSL_VERIFY", None) in ["true", "false"]:
+            self.conf.set("server", "verify", os.environ.get("FLEXIPY_SSL_VERIFY"))
 
     def get_section_list(self, section_name):
         """

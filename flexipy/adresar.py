@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import requests
 import json
+
+import requests
+
+from .config import Config
 from .exceptions import FlexipyException
 from .main import Flexipy
-from .config import Config
 
 
 class Adresar(Flexipy):
