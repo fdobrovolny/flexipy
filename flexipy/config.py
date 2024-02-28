@@ -6,10 +6,11 @@ Je treba zde nastavit nektere parametry(viz dokumentace).
 Nektere promene je treba doplnit na zaklade faktickeho 
 stavu z Flexibee. Napriklad doplnit typy faktur.
 """
-
+import pathlib
 from configparser import ConfigParser, NoSectionError
 from pkg_resources import Requirement, resource_filename
 import codecs
+import os
 
 
 class Config(object):
@@ -19,8 +20,14 @@ class Config(object):
 
     def __init__(self, config_name="flexipy/flexipy.conf"):
         self.conf = ConfigParser()
-        # use resource management api to find flexipy.conf, see docs
-        filename = resource_filename(Requirement.parse("flexipy"), config_name)
+        if pathlib.Path(config_name).is_absolute():
+            filename = config_name
+        else:
+            # use resource management api to find flexipy.conf
+            filename = resource_filename(Requirement.parse("flexipy"), config_name)
+
+            if not pathlib.Path(filename).exists():
+                filename = config_name
         # Open the file with the correct encoding
         try:
             with codecs.open(filename, "r", encoding="utf-8") as f:
@@ -31,6 +38,19 @@ class Config(object):
                 + config_name
                 + " neexistuje nebo jste uvedli spatnou cestu."
             )
+
+        if os.environ.get('FLEXIPY_USERNAME', None) is not None:
+            self.conf.set('server', 'username', os.environ.get('FLEXIPY_USERNAME'))
+        if os.environ.get('FLEXIPY_PASSWORD', None) is not None:
+            self.conf.set('server', 'password', os.environ.get('FLEXIPY_PASSWORD'))
+        if os.environ.get('FLEXIPY_HOST', None) is not None:
+            self.conf.set('server', 'host', os.environ.get('FLEXIPY_HOST'))
+        if os.environ.get('FLEXIPY_FIRMA', None) is not None:
+            self.conf.set('server', 'firma', os.environ.get('FLEXIPY_FIRMA'))
+        if os.environ.get('FLEXIPY_PROTOCOL', None) in ["http", "https"]:
+            self.conf.set('server', 'protocol', os.environ.get('FLEXIPY_PROTOCOL'))
+        if os.environ.get('FLEXIPY_SSL_VERIFY', None) in ["true", "false"]:
+            self.conf.set('server', 'verify', os.environ.get('FLEXIPY_SSL_VERIFY'))
 
     def get_section_list(self, section_name):
         """
@@ -97,6 +117,7 @@ class TestingConfig(Config):
 
     def __init__(self):
         Config.__init__(self, config_name="flexipy/test_flexipy.conf")
+
 
 class DemoConfig(Config):
     """
