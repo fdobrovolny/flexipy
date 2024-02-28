@@ -74,3 +74,64 @@ class Banka(Flexipy):
         :param bank_item: dictionary obsahujici zmeny
         """
         return self.update_evidence_item(id, "banka", bank_item)
+
+    def do_pair_payments(self):
+        """
+        Provede automaticke sparovani plateb s fakturami.
+        """
+        r = self.send_request(method="post", endUrl="banka/automaticke-parovani.json")
+        if r.status_code not in (200, 201):
+            raise FlexipyException("Neznama chyba.")
+        else:
+            return self.process_response(r)
+
+    def do_load_online_bank_records(self):
+        """
+        Provede automaticke načtení výpisů z banky.
+
+        :raises FlexipyException: Pokud není návratová hodnota 200, 201
+
+        https://podpora.flexibee.eu/cs/articles/4731153-nacitani-bankovnich-vypisu
+        """
+        r = self.send_request(method="post", endUrl=f"banka/nacteni-vypisu-online.json")
+        if r.status_code not in (200, 201):
+            raise FlexipyException(f"Chyba načítání výpisů: {r.text}")
+        else:
+            return self.process_response(r)
+
+    def do_load_bank_records(self, account_id, data):
+        """
+        Provede automaticke nacteni vypisu.
+
+        :param account_id: Id uctu
+        :param data: Data výpisu
+        :return: Standrdní result dict
+
+        :note: Můžete mít potíže s data s češtinou pokud
+        jsou ve formátu str a ne bytes (ze souboru).
+        Fix:
+        ```python
+        data = data.encode('latin2')
+        ```
+
+        :raises FlexipyException:
+        """
+        r = self.send_request(
+            method="post",
+            endUrl=f"bankovni-ucet/{account_id}/nacteni-vypisu.json",
+            payload=data,
+        )
+        if r.status_code not in (200, 201):
+            raise FlexipyException("Neznama chyba.")
+        return self.process_response(r)
+
+    def do_load_bank_records_by_code(self, account_code, data):
+        """
+        Provede automaticke nacteni vypisu
+
+        :param account_code: Kód účtu
+        :param data: data
+        :return:
+        """
+        ucet = self.get_bankovni_ucet_by_code(account_code)
+        return self.do_load_bank_records(ucet["id"], data)

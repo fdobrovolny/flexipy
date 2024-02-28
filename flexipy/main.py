@@ -204,14 +204,6 @@ class Flexipy(object):
             else:
                 raise FlexipyException("Zaznam s kodem=" + str(kod) + " nebyl nalezen.")
 
-    def proved_sparovani_plateb(self):
-        """
-        Provede automaticke sparovani plateb s fakturami.
-        """
-        r = self.send_request(method="post", endUrl="banka/automaticke-parovani.json")
-        if r.status_code not in (200, 201):
-            raise FlexipyException("Neznama chyba.")
-
     def create_evidence_item(self, evidence, data):
         """Privatni funkce pro vytvareni novych zaznamu v evidenci.
         Returns :tuple skladajici se z (success, result_id, error_message)
