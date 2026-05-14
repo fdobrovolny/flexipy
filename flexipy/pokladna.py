@@ -81,7 +81,7 @@ class Pokladna(Flexipy):
             "typPohybuK": movement_type,
             "pokladna": cash_register_type,
             "zdrojProSkl": warehouse_source,
-            "metodaZaokrDoklK": "metodaZaokrDokl.nezaokrouhlovat",
+            "metodaZaokrDoklK": "metodaZaokr.0sazba",
             "vytvaretKorPol": False,
         }
         if extra_params is not None:

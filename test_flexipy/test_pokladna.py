@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from datetime import date
+from uuid import uuid4
 
 import pytest
 import requests
@@ -30,7 +31,7 @@ class TestPokladna:
             self.pokladna.delete_pokladni_doklad(self.created_id)
 
     def test_create_get_update_delete_pokladni_doklad(self):
-        code = "PK" + datetime.now().strftime("%m%d%H%M%S")
+        code = "FXP" + uuid4().hex[:12].upper()
 
         result = self.pokladna.create_pokladni_doklad(
             kod=code,

@@ -1,4 +1,4 @@
-from datetime import datetime
+from uuid import uuid4
 
 import pytest
 import requests
@@ -30,7 +30,7 @@ class TestAdresar:
             self.adresar.delete_adresar(self.created_id)
 
     def test_create_get_update_delete_adresar(self):
-        code = "FX" + datetime.now().strftime("%m%d%H%M%S")
+        code = "FXA" + uuid4().hex[:12].upper()
 
         result = self.adresar.create_adresar(
             kod=code,

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from datetime import date
+from uuid import uuid4
+
 from flexipy.main import Flexipy
 from flexipy import config
 from flexipy import Faktura
@@ -25,39 +28,50 @@ class TestFlexipy:
             pytest.skip("FlexiBee test server is not available")
         self.flexipy = Flexipy(self.conf)
         self.faktura = Faktura(self.conf)
+        self.created_invoice_ids = []
+        self.test_codes = ["FXM" + uuid4().hex[:12].upper() for _ in range(3)]
+        self.spec_sym = str(int(uuid4().hex[:8], 16))
         # create some items in flexibee
-        self.faktura.create_vydana_faktura(
-            kod="flex11",
+        result = self.faktura.create_vydana_faktura(
+            kod=self.test_codes[0],
             var_sym="11235484",
-            datum_vyst="2013-02-28",
+            datum_vyst=str(date.today()),
             zdroj_pro_sklad=False,
         )
-        dalsiParams = {"specSym": 48152342}
+        if result[0] is not True:
+            self.teardown_method()
+        assert result[0] is True
+        self.created_invoice_ids.append(result[1])
+        dalsiParams = {"specSym": self.spec_sym}
         # tyto dve jsou pro testovani get all records
-        self.faktura.create_vydana_faktura(
-            kod="flex12",
+        result = self.faktura.create_vydana_faktura(
+            kod=self.test_codes[1],
             var_sym="11235494",
-            datum_vyst="2013-03-14",
+            datum_vyst=str(date.today()),
             zdroj_pro_sklad=False,
             dalsi_param=dalsiParams,
         )
-        self.faktura.create_vydana_faktura(
-            kod="flex13",
+        if result[0] is not True:
+            self.teardown_method()
+        assert result[0] is True
+        self.created_invoice_ids.append(result[1])
+        result = self.faktura.create_vydana_faktura(
+            kod=self.test_codes[2],
             var_sym="11235495",
-            datum_vyst="2013-02-17",
+            datum_vyst=str(date.today()),
             zdroj_pro_sklad=False,
             dalsi_param=dalsiParams,
         )
+        if result[0] is not True:
+            self.teardown_method()
+        assert result[0] is True
+        self.created_invoice_ids.append(result[1])
 
     def teardown_method(self):
         if not hasattr(self, "faktura"):
             return
-        inv1 = self.faktura.get_vydana_faktura_by_code("flex11")
-        inv2 = self.faktura.get_vydana_faktura_by_code("flex12")
-        inv3 = self.faktura.get_vydana_faktura_by_code("flex13")
-        self.faktura.delete_vydana_faktura(inv1["id"])
-        self.faktura.delete_vydana_faktura(inv2["id"])
-        self.faktura.delete_vydana_faktura(inv3["id"])
+        for invoice_id in self.created_invoice_ids:
+            self.faktura.delete_vydana_faktura(invoice_id)
 
     def test_validate_item(self):
         invalid_params = {"doprava": "", "duzpaPuv": "", "zaveTxt": ""}
@@ -101,12 +115,12 @@ class TestFlexipy:
         assert expected_result == actual_result
 
     def test_get_all_records_with_query(self):
-        # get all records with specSym = 48152342
-        url = self.url + 'faktura-vydana/(specSym="48152342").json'
+        # get all records with the unique specSym created in setup_method
+        url = self.url + 'faktura-vydana/(specSym="' + self.spec_sym + '").json'
         r = requests.get(url=url, auth=(self.username, self.password), verify=False)
         expected_result = r.json()["winstrom"]["faktura-vydana"]
         actual_result = self.flexipy.get_all_records(
-            "faktura-vydana", query="specSym='" + str(48152342) + "'"
+            "faktura-vydana", query="specSym='" + self.spec_sym + "'"
         )
         assert len(expected_result) == len(actual_result)
         assert expected_result == actual_result

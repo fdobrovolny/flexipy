@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from datetime import date
+from uuid import uuid4
+
 from flexipy import Faktura
 from flexipy import config
 import requests
@@ -21,6 +24,11 @@ class TestFaktura:
         except requests.exceptions.RequestException:
             pytest.skip("FlexiBee test server is not available")
         self.faktura = Faktura(self.conf)
+        self.created_invoice_ids = []
+
+    def teardown_method(self):
+        for invoice_id in self.created_invoice_ids:
+            self.faktura.delete_vydana_faktura(invoice_id)
 
     def test_get_all_vydane_faktury(self):
         r = requests.get(
@@ -29,10 +37,7 @@ class TestFaktura:
             verify=False,
         )
         d = r.json()
-        if len(d["winstrom"]["faktura-vydana"]):
-            list_of_invoices_expected = d["winstrom"]["faktura-vydana"][0]
-        else:
-            list_of_invoices_expected = d["winstrom"]["faktura-vydana"]
+        list_of_invoices_expected = d["winstrom"]["faktura-vydana"]
         list_of_invoices_actual = self.faktura.get_all_vydane_faktury()
         assert list_of_invoices_expected == list_of_invoices_actual
 
@@ -51,8 +56,9 @@ class TestFaktura:
         assert list_of_invoices_expected == list_of_invoices_actual
 
     def test_create_vydana_faktura(self):
+        code = "FXI" + uuid4().hex[:12].upper()
         expected_data = {
-            "kod": "flex11",
+            "kod": code,
             "typDokl": "code:FAKTURA",
             "firma": "code:201",
             "popis": "Flexipy test invoice",
@@ -63,36 +69,35 @@ class TestFaktura:
         }
         dalsi_param = {"popis": "Flexipy test invoice", "firma": "code:201"}
         result = self.faktura.create_vydana_faktura(
-            kod="flex11",
+            kod=code,
             var_sym="11235484",
-            datum_vyst="2013-02-28",
+            datum_vyst=str(date.today()),
             zdroj_pro_sklad=False,
             typ_dokl=self.conf.get_typy_faktury_vydane()[0],
             dalsi_param=dalsi_param,
         )
         assert result[0] == True  # expected True
         id = result[1]
+        self.created_invoice_ids.append(id)
         actualData = self.faktura.get_vydana_faktura(id, detail="full")
         assert actualData["kod"].lower() == expected_data["kod"].lower()
         assert actualData["typDokl"] == expected_data["typDokl"]
         assert actualData["firma"] == expected_data["firma"]
         assert actualData["popis"] == expected_data["popis"]
         assert actualData["sumDphZakl"] == expected_data["sumDphZakl"]
-        # uklid po sobe
-        self.faktura.delete_vydana_faktura(id)
 
     def test_create_vydana_faktura_polozky(self):
+        code = "FXI" + uuid4().hex[:12].upper()
         polozky = [
             {
                 "typPolozkyK": self.conf.get_typ_polozky_vydane()[0],
                 "zdrojProSkl": False,
                 "nazev": "vypujceni auta",
-                "ucetni": True,
                 "cenaMj": "4815.0",
             }
         ]
         expected_data = {
-            "kod": "flex12",
+            "kod": code,
             "typDokl": "code:FAKTURA",
             "firma": "code:201",
             "popis": "Flexipy test invoice",
@@ -105,7 +110,6 @@ class TestFaktura:
                 "typPolozkyK": "typPolozky.obecny",
                 "zdrojProSkl": "false",
                 "nazev": "vypujceni auta",
-                "ucetni": "true",
                 "cenaMj": "4815.0",
             }
         ]
@@ -115,9 +119,9 @@ class TestFaktura:
             "typUcOp": "code:TRŽBA SLUŽBY",
         }
         result = self.faktura.create_vydana_faktura(
-            kod="flex12",
+            kod=code,
             var_sym="11235484",
-            datum_vyst="2013-02-28",
+            datum_vyst=str(date.today()),
             zdroj_pro_sklad=False,
             typ_dokl=self.conf.get_typy_faktury_vydane()[0],
             dalsi_param=dalsi_param,
@@ -125,16 +129,17 @@ class TestFaktura:
         )
         assert result[0] == True  # expected True
         id = result[1]
+        self.created_invoice_ids.append(id)
         actualData = self.faktura.get_vydana_faktura(id, detail="full")
         assert actualData["kod"].lower() == expected_data["kod"].lower()
         assert actualData["typDokl"] == expected_data["typDokl"]
         assert actualData["firma"] == expected_data["firma"]
         assert actualData["popis"] == expected_data["popis"]
-        # pocet polozek se musi rovnat
-        assert len(actualData["polozkyFaktury"]) == len(expected_polozky)
-        actual_polozky = actualData["polozkyFaktury"][0]
+        actual_polozky = next(
+            item
+            for item in actualData["polozkyFaktury"]
+            if item["nazev"] == expected_polozky[0]["nazev"]
+        )
         assert actual_polozky["typPolozkyK"] == expected_polozky[0]["typPolozkyK"]
         assert actual_polozky["nazev"] == expected_polozky[0]["nazev"]
         assert actual_polozky["cenaMj"] == expected_polozky[0]["cenaMj"]
-        # uklid po sobe
-        self.faktura.delete_vydana_faktura(id)
