@@ -1,4 +1,14 @@
-from flexipy import AddressBook, Adresar, Bank, Banka, CashRegister, Faktura, Invoice
+from flexipy import (
+    AccountingJournal,
+    AddressBook,
+    Adresar,
+    Bank,
+    Banka,
+    CashRegister,
+    Faktura,
+    Invoice,
+    UcetniDenik,
+)
 
 
 class FakeConfig:
@@ -47,6 +57,7 @@ def test_english_class_aliases_keep_existing_classes_available():
     assert Invoice is Faktura
     assert AddressBook is Adresar
     assert Bank is Banka
+    assert AccountingJournal is UcetniDenik
     assert CashRegister.__name__ == "Pokladna"
 
 
