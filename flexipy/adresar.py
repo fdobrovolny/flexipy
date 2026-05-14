@@ -10,7 +10,9 @@ from .main import Flexipy
 
 
 class Adresar(Flexipy):
-    def __init__(self, conf=Config()):
+    def __init__(self, conf=None):
+        if conf is None:
+            conf = Config()
         Flexipy.__init__(self, config=conf)
 
     def get_adresar(self, id, detail="summary"):

@@ -5,15 +5,17 @@ import re
 
 import requests
 
-from . import config
+from . import config as config_module
 from .exceptions import FlexipyException
 
 
 class Flexipy(object):
-    def __init__(self, config=config.Config()):
+    def __init__(self, config=None):
         """
         Pokud neni predana jina instance je automaticky vytvoren config s defaultnimi hodnotami.
         """
+        if config is None:
+            config = config_module.Config()
         self.conf = config
 
     def send_request(self, method, endUrl, payload=""):
@@ -86,7 +88,7 @@ class Flexipy(object):
 
         https://intercom.help/podpora-flexi/cs/articles/4722193-strankovani
         """
-        re.sub(r"\s", "", evidence)  # remove all wihtespaces
+        evidence = re.sub(r"\s", "", evidence)  # remove all wihtespaces
         if query is None:
             r = self.send_request(
                 method="get",

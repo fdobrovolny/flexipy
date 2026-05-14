@@ -7,7 +7,9 @@ from .main import Flexipy
 
 
 class Banka(Flexipy):
-    def __init__(self, conf=Config()):
+    def __init__(self, conf=None):
+        if conf is None:
+            conf = Config()
         Flexipy.__init__(self, config=conf)
 
     def create_bank_doklad(
@@ -25,12 +27,12 @@ class Banka(Flexipy):
         :param typ_dokl: typ bankovniho dokladu moznosti jsou definovany v configu
         :param bank_ucet: ucet uvedeny v dokladu(moznosti v konfigu)
         """
-        if typ_dokl == None:
+        if typ_dokl is None:
             typ_dokl = self.conf.get_typ_bank_dokladu()[0]
         typ_dokl = "code:" + typ_dokl
-        if typ_pohybu == None:
+        if typ_pohybu is None:
             typ_pohybu = self.conf.get_typ_pohybu()[0]
-        if bank_ucet == None:
+        if bank_ucet is None:
             bank_ucet = self.conf.get_bankovni_ucty()[0]
         bank_ucet = "code:" + bank_ucet
         b_item = {
@@ -40,9 +42,9 @@ class Banka(Flexipy):
             "typPohybuK": typ_pohybu,
             "banka": bank_ucet,
         }
-        if dalsi_param != None:
+        if dalsi_param is not None:
             self.validate_params(dalsi_param, "banka")
-            for k, v in dalsi_param.iteritems():
+            for k, v in dalsi_param.items():
                 b_item[k] = v
         return self.create_evidence_item("banka", b_item)
 

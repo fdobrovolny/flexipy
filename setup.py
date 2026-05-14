@@ -15,13 +15,12 @@ setup(
         "flexipy": ["flexipy.conf", "test_flexipy.conf", "demo_flexibee.conf"]
     },
     install_requires=(
-        "setuptools>=0.6b1",
         "requests",
     ),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
     ],
 )

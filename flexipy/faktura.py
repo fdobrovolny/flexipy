@@ -6,7 +6,9 @@ from .main import Flexipy
 
 
 class Faktura(Flexipy):
-    def __init__(self, conf=Config()):
+    def __init__(self, conf=None):
+        if conf is None:
+            conf = Config()
         Flexipy.__init__(self, config=conf)
 
     def get_all_vydane_faktury(self, query=None, detail="summary", **kwargs):
@@ -50,7 +52,7 @@ class Faktura(Flexipy):
         Returns :tuple skladajici se z (success, result, error_message)
         """
         # doplneni vyzadovano flexibee
-        if typ_dokl == None:
+        if typ_dokl is None:
             typ_dokl = self.conf.get_typy_faktury_vydane()[0]
         typ_dokl = "code:" + typ_dokl
         # dopleni datumu na pozadovany format
@@ -62,11 +64,11 @@ class Faktura(Flexipy):
             "zdrojProSkl": zdroj_pro_sklad,
             "typDokl": typ_dokl,
         }
-        if dalsi_param != None:
+        if dalsi_param is not None:
             self.validate_params(dalsi_param, "faktura-vydana")
-            for k, v in dalsi_param.iteritems():
+            for k, v in dalsi_param.items():
                 invoice[k] = v
-        if polozky_faktury != None:
+        if polozky_faktury is not None:
             invoice["bezPolozek"] = False
             inv_items = []
             for it in polozky_faktury:
@@ -99,7 +101,7 @@ class Faktura(Flexipy):
         Returns :tuple skladajici se z (success, result, error_message)
         kde success = True/False
         """
-        if typ_dokl == None:
+        if typ_dokl is None:
             typ_dokl = self.conf.get_typy_faktury_prijate()[0]
         typ_dokl = "code:" + typ_dokl
         datum_splat += "+01:00"
@@ -113,11 +115,11 @@ class Faktura(Flexipy):
             "cisDosle": cislo_dosle,
             "typDokl": typ_dokl,
         }
-        if dalsi_param != None:
+        if dalsi_param is not None:
             self.validate_params(dalsi_param, "faktura-prijata")
-            for k, v in dalsi_param.iteritems():
+            for k, v in dalsi_param.items():
                 invoice[k] = v
-        if polozky_faktury != None:
+        if polozky_faktury is not None:
             # TODO pouzij __validate_params na validaci polozek
             invoice["bezPolozek"] = False
             inv_items = []

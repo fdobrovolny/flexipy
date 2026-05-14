@@ -10,8 +10,7 @@ import codecs
 import os
 import pathlib
 from configparser import ConfigParser, NoSectionError
-
-from pkg_resources import Requirement, resource_filename
+from importlib import resources
 
 
 class Config(object):
@@ -19,16 +18,11 @@ class Config(object):
     Base config class definuje zakladni metody pro praci s konfiguracnim souborem.
     """
 
-    def __init__(self, config_name="flexipy/flexipy.conf"):
+    def __init__(self, config_name=None):
+        if config_name is None:
+            config_name = os.environ.get("FLEXIPY_CONF", "flexipy/flexipy.conf")
         self.conf = ConfigParser()
-        if pathlib.Path(config_name).is_absolute():
-            filename = config_name
-        else:
-            # use resource management api to find flexipy.conf
-            filename = resource_filename(Requirement.parse("flexipy"), config_name)
-
-            if not pathlib.Path(filename).exists():
-                filename = config_name
+        filename = self._resolve_config_path(config_name)
         # Open the file with the correct encoding
         try:
             with codecs.open(filename, "r", encoding="utf-8") as f:
@@ -52,6 +46,22 @@ class Config(object):
             self.conf.set("server", "protocol", os.environ.get("FLEXIPY_PROTOCOL"))
         if os.environ.get("FLEXIPY_SSL_VERIFY", None) in ["true", "false"]:
             self.conf.set("server", "verify", os.environ.get("FLEXIPY_SSL_VERIFY"))
+        if os.environ.get("FLEXIPY_URL", None) is not None:
+            self.conf.set("server", "url", os.environ.get("FLEXIPY_URL"))
+
+    def _resolve_config_path(self, config_name):
+        path = pathlib.Path(config_name)
+        if path.is_absolute() or path.exists():
+            return str(path)
+
+        package_prefix = "flexipy/"
+        if config_name.startswith(package_prefix):
+            resource_name = config_name[len(package_prefix) :]
+            resource_path = resources.files("flexipy").joinpath(resource_name)
+            if resource_path.is_file():
+                return str(resource_path)
+
+        return config_name
 
     def get_section_list(self, section_name):
         """

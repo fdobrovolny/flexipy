@@ -1,16 +1,21 @@
 from flexipy import config
 from flexipy import Banka
 import requests
+import pytest
 from datetime import date
 
 
 class TestBanka:
-    def setup(self):
+    def setup_method(self):
         self.conf = config.TestingConfig()
         server_settings = self.conf.get_server_config()
         self.username = str(server_settings["username"])
         self.password = str(server_settings["password"])
         self.url = str(server_settings["url"])
+        try:
+            requests.get(self.url, auth=(self.username, self.password), verify=False, timeout=2)
+        except requests.exceptions.RequestException:
+            pytest.skip("FlexiBee test server is not available")
         self.banka = Banka(self.conf)
 
     def test_create_bank_doklad(self):
