@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from .config import Config
-from .exceptions import FlexipyException
 from .main import Flexipy
 
 
@@ -11,25 +10,61 @@ class Faktura(Flexipy):
             conf = Config()
         Flexipy.__init__(self, config=conf)
 
+    def get_issued_invoices(self, query=None, detail="summary", **kwargs):
+        """Return issued invoices from FlexiBee evidence ``faktura-vydana``."""
+        return self.get_all_records("faktura-vydana", query, detail, **kwargs)
+
     def get_all_vydane_faktury(self, query=None, detail="summary", **kwargs):
-        """Metoda vrati vsechny vydane faktury z Flexibee.
-        :param query: Pokud je uveden dotaz ve formatu jaky podporuje
-        Flexibee(viz dokumentace), vrati vyfiltrovane zaznamy na zaklade
-        dotazu.
-        :param kwargs: extra arguments to get_all_records such as pagination
-        """
-        d = self.get_all_records("faktura-vydana", query, detail, **kwargs)
-        return d
+        """Backward-compatible alias for :meth:`get_issued_invoices`."""
+        return self.get_issued_invoices(query, detail, **kwargs)
+
+    def get_received_invoices(self, query=None, detail="summary", **kwargs):
+        """Return received invoices from FlexiBee evidence ``faktura-prijata``."""
+        return self.get_all_records("faktura-prijata", query, detail, **kwargs)
 
     def get_all_prijate_faktury(self, query=None, detail="summary", **kwargs):
-        """Metoda vrati vsechny prijate faktury z Flexibee.
-        :param query: Pokud je uveden dotaz ve formatu jaky podporuje
-        Flexibee(viz dokumentace), vrati vyfiltrovane zaznamy na zaklade
-        dotazu.
-        :param kwargs: extra arguments to get_all_records such as pagination
+        """Backward-compatible alias for :meth:`get_received_invoices`."""
+        return self.get_received_invoices(query, detail, **kwargs)
+
+    def create_issued_invoice(
+        self,
+        code,
+        variable_symbol,
+        issued_on,
+        warehouse_source=False,
+        document_type=None,
+        extra_params=None,
+        invoice_items=None,
+    ):
+        """Create an issued invoice.
+
+        ``extra_params`` and ``invoice_items`` are passed to FlexiBee as raw
+        field dictionaries, so their keys must use FlexiBee field names such as
+        ``firma``, ``popis``, ``nazev`` or ``cenaMj``.
         """
-        d = self.get_all_records("faktura-prijata", query, detail, **kwargs)
-        return d
+        if document_type is None:
+            document_type = self.conf.get_typy_faktury_vydane()[0]
+        document_type = "code:" + document_type
+        issued_on += "+01:00"
+        invoice = {
+            "kod": code,
+            "varSym": variable_symbol,
+            "datVyst": issued_on,
+            "zdrojProSkl": warehouse_source,
+            "typDokl": document_type,
+        }
+        if extra_params is not None:
+            self.validate_params(extra_params, "faktura-vydana")
+            for k, v in extra_params.items():
+                invoice[k] = v
+        if invoice_items is not None:
+            invoice["bezPolozek"] = False
+            inv_items = []
+            for it in invoice_items:
+                self.validate_params(it, "faktura-vydana-polozka")
+                inv_items.append(it)
+            invoice["polozkyFaktury"] = inv_items
+        return self.create_evidence_item("faktura-vydana", invoice)
 
     def create_vydana_faktura(
         self,
@@ -41,41 +76,60 @@ class Faktura(Flexipy):
         dalsi_param=None,
         polozky_faktury=None,
     ):
-        """Tato metoda vytvori novou vydanou fakturu ve Flexibee
-        :param kod: interni cislo
-        :param var_sym: variabilni symbol faktury
-        :param datum_vyst: datum vystaveni faktury format datumu(2013-02-28)
-        :param zdroj_pro_sklad: True nebo False zda je zdrojem pro skladove zaznamy
-        :param typ_dokl: mozne hodnoty se nachazi v config.typ_faktury_vydane
-        :param dalsi_param:  dalsi nepovinne paramerty viz dokumentace Flexibee
-        :param polozky_faktury: polozky fakturz jsou list obsahujici jednotlive polozky
-        Returns :tuple skladajici se z (success, result, error_message)
+        """Backward-compatible alias for :meth:`create_issued_invoice`."""
+        return self.create_issued_invoice(
+            code=kod,
+            variable_symbol=var_sym,
+            issued_on=datum_vyst,
+            warehouse_source=zdroj_pro_sklad,
+            document_type=typ_dokl,
+            extra_params=dalsi_param,
+            invoice_items=polozky_faktury,
+        )
+
+    def create_received_invoice(
+        self,
+        code,
+        variable_symbol,
+        received_number,
+        due_on,
+        issued_on,
+        warehouse_source=False,
+        document_type=None,
+        extra_params=None,
+        invoice_items=None,
+    ):
+        """Create a received invoice.
+
+        ``extra_params`` and ``invoice_items`` are passed to FlexiBee as raw
+        field dictionaries, so their keys must use FlexiBee field names.
         """
-        # doplneni vyzadovano flexibee
-        if typ_dokl is None:
-            typ_dokl = self.conf.get_typy_faktury_vydane()[0]
-        typ_dokl = "code:" + typ_dokl
-        # dopleni datumu na pozadovany format
-        datum_vyst += "+01:00"
+        if document_type is None:
+            document_type = self.conf.get_typy_faktury_prijate()[0]
+        document_type = "code:" + document_type
+        due_on += "+01:00"
+        issued_on += "+01:00"
         invoice = {
-            "kod": kod,
-            "varSym": var_sym,
-            "datVyst": datum_vyst,
-            "zdrojProSkl": zdroj_pro_sklad,
-            "typDokl": typ_dokl,
+            "datSplat": due_on,
+            "kod": code,
+            "zdrojProSkl": warehouse_source,
+            "datVyst": issued_on,
+            "varSym": variable_symbol,
+            "cisDosle": received_number,
+            "typDokl": document_type,
         }
-        if dalsi_param is not None:
-            self.validate_params(dalsi_param, "faktura-vydana")
-            for k, v in dalsi_param.items():
+        if extra_params is not None:
+            self.validate_params(extra_params, "faktura-prijata")
+            for k, v in extra_params.items():
                 invoice[k] = v
-        if polozky_faktury is not None:
+        if invoice_items is not None:
             invoice["bezPolozek"] = False
             inv_items = []
-            for it in polozky_faktury:
-                self.validate_params(it, "faktura-vydana-polozka")
+            for it in invoice_items:
+                self.validate_params(it, "faktura-prijata-polozka")
                 inv_items.append(it)
             invoice["polozkyFaktury"] = inv_items
-        return self.create_evidence_item("faktura-vydana", invoice)
+        return self.create_evidence_item("faktura-prijata", invoice)
 
     def create_prijata_faktura(
         self,
@@ -89,107 +143,116 @@ class Faktura(Flexipy):
         dalsi_param=None,
         polozky_faktury=None,
     ):
-        """Tato metoda zaznamena novou prijatou fakturu ve Flexibee
-        :param kod: interni cislo
-        :param var_sym: variabilni symbol faktury
-        :param datum_splat: datum splatnosti faktury format datumu(2013-02-28)
-        :param datum_vyst: datum vystaveni faktury format datumu(2013-02-28)
-        :param zdroj_pro_sklad: True nebo False zda je zdrojem pro skladove zaznamy
-        :param typ_dokl: mozne hodnoty se nachazi v config.typ_faktury_prijate
-        :param dalsi_param:  dalsi nepovinne paramerty viz dokumentace Flexibee
-        :param polozky_faktury: polozky fakturz jsou list obsahujici jednotlive polozky
-        Returns :tuple skladajici se z (success, result, error_message)
-        kde success = True/False
-        """
-        if typ_dokl is None:
-            typ_dokl = self.conf.get_typy_faktury_prijate()[0]
-        typ_dokl = "code:" + typ_dokl
-        datum_splat += "+01:00"
-        datum_vyst += "+01:00"
-        invoice = {
-            "datSplat": datum_splat,
-            "kod": kod,
-            "zdrojProSkl": zdroj_pro_sklad,
-            "datVyst": datum_vyst,
-            "varSym": var_sym,
-            "cisDosle": cislo_dosle,
-            "typDokl": typ_dokl,
-        }
-        if dalsi_param is not None:
-            self.validate_params(dalsi_param, "faktura-prijata")
-            for k, v in dalsi_param.items():
-                invoice[k] = v
-        if polozky_faktury is not None:
-            # TODO pouzij __validate_params na validaci polozek
-            invoice["bezPolozek"] = False
-            inv_items = []
-            for it in polozky_faktury:
-                self.validate_params(it, "faktura-prijata-polozka")
-                inv_items.append(it)
-            invoice["polozkyFaktury"] = inv_items
-        return self.create_evidence_item("faktura-prijata", invoice)
+        """Backward-compatible alias for :meth:`create_received_invoice`."""
+        return self.create_received_invoice(
+            code=kod,
+            variable_symbol=var_sym,
+            received_number=cislo_dosle,
+            due_on=datum_splat,
+            issued_on=datum_vyst,
+            warehouse_source=zdroj_pro_sklad,
+            document_type=typ_dokl,
+            extra_params=dalsi_param,
+            invoice_items=polozky_faktury,
+        )
 
-    def update_vydana_faktura(self, id, invoice):
-        """Tato metoda slouzi k updatu hodnot vydane faktuy, ktera je jiz
-        vedena ve Flexibee.
-        Pro ukazku pouziti viz dokumentace.
-        Returns :tuple consisting of (success, result, error_message)
-        :param: id: id of invoice which you want to change
-        :param invoice: dictionary that contains changed data
-        """
+    def update_issued_invoice(self, id, invoice):
+        """Update an issued invoice with raw FlexiBee field values."""
         return self.update_evidence_item(id, "faktura-vydana", invoice)
 
-    def update_prijata_faktura(self, id, invoice):
+    def update_vydana_faktura(self, id, invoice):
+        """Backward-compatible alias for :meth:`update_issued_invoice`."""
+        return self.update_issued_invoice(id, invoice)
+
+    def update_received_invoice(self, id, invoice):
+        """Update a received invoice with raw FlexiBee field values."""
         return self.update_evidence_item(id, "faktura-prijata", invoice)
 
-    def delete_vydana_faktura(self, id):
-        """Smaze vydanou fakturu podle id.
-        :param id: id faktury
-        """
+    def update_prijata_faktura(self, id, invoice):
+        """Backward-compatible alias for :meth:`update_received_invoice`."""
+        return self.update_received_invoice(id, invoice)
+
+    def delete_issued_invoice(self, id):
+        """Delete an issued invoice by FlexiBee id or code."""
         self.delete_item(id, "faktura-vydana")
 
-    def delete_prijata_faktura(self, id):
-        """Smaze prijatou fakturu podle id.
-        :param id: id faktury
-        """
+    def delete_vydana_faktura(self, id):
+        """Backward-compatible alias for :meth:`delete_issued_invoice`."""
+        self.delete_issued_invoice(id)
+
+    def delete_received_invoice(self, id):
+        """Delete a received invoice by FlexiBee id or code."""
         self.delete_item(id, "faktura-prijata")
 
-    def get_vydana_faktura(self, id, detail="summary"):
+    def delete_prijata_faktura(self, id):
+        """Backward-compatible alias for :meth:`delete_received_invoice`."""
+        self.delete_received_invoice(id)
+
+    def get_issued_invoice(self, id, detail="summary"):
+        """Return one issued invoice by FlexiBee id or code."""
         return self.get_evidence_item(id, "faktura-vydana", detail)
 
-    def get_vydana_faktura_by_code(self, code, detail="summary"):
+    def get_vydana_faktura(self, id, detail="summary"):
+        """Backward-compatible alias for :meth:`get_issued_invoice`."""
+        return self.get_issued_invoice(id, detail)
+
+    def get_issued_invoice_by_code(self, code, detail="summary"):
+        """Return one issued invoice by FlexiBee ``kod``."""
         return self.get_evidence_item_by_code(code, "faktura-vydana", detail)
 
-    def get_prijata_faktura(self, id, detail="summary"):
+    def get_vydana_faktura_by_code(self, code, detail="summary"):
+        """Backward-compatible alias for :meth:`get_issued_invoice_by_code`."""
+        return self.get_issued_invoice_by_code(code, detail)
+
+    def get_received_invoice(self, id, detail="summary"):
+        """Return one received invoice by FlexiBee id or code."""
         return self.get_evidence_item(id, "faktura-prijata", detail)
 
-    def get_prijata_faktura_by_code(self, code, detail="summary"):
+    def get_prijata_faktura(self, id, detail="summary"):
+        """Backward-compatible alias for :meth:`get_received_invoice`."""
+        return self.get_received_invoice(id, detail)
+
+    def get_received_invoice_by_code(self, code, detail="summary"):
+        """Return one received invoice by FlexiBee ``kod``."""
         return self.get_evidence_item_by_code(code, "faktura-prijata", detail)
 
+    def get_prijata_faktura_by_code(self, code, detail="summary"):
+        """Backward-compatible alias for :meth:`get_received_invoice_by_code`."""
+        return self.get_received_invoice_by_code(code, detail)
+
     def __get_faktura_pdf_url(self, faktura_typ, id):
-        """Vraci url odkaz na fakturu ve formatu pdf.
-        :param faktura_typ: dve moznosti faktura-prijata, faktura-vydana
-        :param id: id faktury
-        """
         server_settings = self.conf.get_server_config()
         url = str(server_settings["url"])
-        return url + faktura_typ + "/" + id + ".pdf"
+        return url + faktura_typ + "/" + str(id) + ".pdf"
+
+    def get_invoice_pdf_url(self, invoice_type, id):
+        """Return the PDF URL for a raw FlexiBee invoice evidence name."""
+        return self.__get_faktura_pdf_url(invoice_type, id)
+
+    def get_faktura_pdf_url(self, faktura_typ, id):
+        """Backward-compatible alias for :meth:`get_invoice_pdf_url`."""
+        return self.get_invoice_pdf_url(faktura_typ, id)
+
+    def get_issued_invoice_pdf_url(self, id):
+        """Return the PDF URL for an issued invoice."""
+        return self.get_invoice_pdf_url("faktura-vydana", id)
 
     def get_faktura_vydana_pdf_url(self, id):
-        """Vrati string obsahujici odkaz na pdf vydane faktury.
-        :param id: Id vydane faktury
-        """
-        return self.get_faktura_pdf_url("faktura-vydana", id)
+        """Backward-compatible alias for :meth:`get_issued_invoice_pdf_url`."""
+        return self.get_issued_invoice_pdf_url(id)
+
+    def get_received_invoice_pdf_url(self, id):
+        """Return the PDF URL for a received invoice."""
+        return self.get_invoice_pdf_url("faktura-prijata", id)
 
     def get_faktura_prijata_pdf_url(self, id):
-        """Vrati string obsahujici odkaz na pdf prijate faktury.
-        :param id: Id prijate faktury
-        """
-        return self.get_faktura_pdf_url("faktura-prijata", id)
+        """Backward-compatible alias for :meth:`get_received_invoice_pdf_url`."""
+        return self.get_received_invoice_pdf_url(id)
+
+    def get_issued_invoice_pdf(self, id):
+        """Return issued invoice PDF bytes."""
+        return self.get_evidence_pdf("faktura-vydana", id)
 
     def get_faktura_vydana_pdf(self, id):
-        """
-        Vraci pdf faktury vydane, ktera je ve Flexibee.
-        :param id: id vydane faktury
-        """
-        return self.get_evidence_pdf("faktura-vydana", id)
+        """Backward-compatible alias for :meth:`get_issued_invoice_pdf`."""
+        return self.get_issued_invoice_pdf(id)

@@ -11,22 +11,13 @@ from .exceptions import FlexipyException
 
 class Flexipy(object):
     def __init__(self, config=None):
-        """
-        Pokud neni predana jina instance je automaticky vytvoren config s defaultnimi hodnotami.
-        """
+        """Create a client with the default config when none is provided."""
         if config is None:
             config = config_module.Config()
         self.conf = config
 
     def send_request(self, method, endUrl, payload=""):
-        """Privatni funkce pro posilani requestu. Cast url se bere z nastaveni v config,
-        zbytek se doplni dle pozadavku. Tato funkce chyta nejzavaznejsi vyjimky definovane
-        v knihovne Requests a vraci Response objekt pro dalsi zpracovani.
-        Returns :r: response object z requests knihovny
-        :param method: Typ HTTP metody, mozne hodnoty:(get,put,post,delete)
-        :param endUrl: koncova cast url, zavisla na konkretnim requestu
-        :param payload: Data v requestu
-        """
+        """Send one HTTP request to the configured FlexiBee server."""
         try:
             server_settings = self.conf.get_server_config()
             url = str(server_settings["url"])
@@ -62,9 +53,7 @@ class Flexipy(object):
             return r
 
     def prepare_data(self, evidence, data):
-        """Tato funkce pripravuje data na odeslani. Prida casti vyzadovane komunikacnim formatem
-        Flexibee a vrati JSON k odeslani.
-        """
+        """Wrap an evidence item in FlexiBee's ``winstrom`` JSON envelope."""
         winstrom = {"winstrom": {evidence: [data]}}
         return json.dumps(winstrom)
 
@@ -76,19 +65,13 @@ class Flexipy(object):
         limit=0,
         start=None,
     ):
-        """Vytvori a odesle pozadavek k ziskani vsech zaznamu z pozadovane evidence.
-        Returns :list: contatining all records
+        """Return records from a FlexiBee evidence.
 
-        :param evidence: podporovane evidence se nachazi v config.evidence_list
-        :param query: dotaz ktey filtruje zaznamy
-        :param detail: uroven zobrazeni detailu(kolik polozek daneho zaznamu se vypise)
-        defaultni hodnota je summary. Dalsi moznosi je id(vypise pouze id zaznamu) a full(kompletni vypis)
-        :param limit: Maximální počet záznamů na jedné stránce. None je 20. Deafultní hodnota 0 vrací všechny záznamy bez omezení.
-        :param start: Kolik záznamů přeskočit. Není závislé na parametru limit.
-
-        https://intercom.help/podpora-flexi/cs/articles/4722193-strankovani
+        ``query`` is a raw FlexiBee filter expression. ``detail`` is passed
+        through to FlexiBee, commonly ``summary``, ``id`` or ``full``. ``limit``
+        and ``start`` map to FlexiBee pagination parameters.
         """
-        evidence = re.sub(r"\s", "", evidence)  # remove all wihtespaces
+        evidence = re.sub(r"\s", "", evidence)
         if query is None:
             r = self.send_request(
                 method="get",
@@ -101,8 +84,6 @@ class Flexipy(object):
                 ),
             )
         else:
-            # pouzij query pro filtrovani
-            # TODO: nejakym zpusobem zvaliduj query
             r = self.send_request(
                 method="get",
                 endUrl=(
@@ -118,31 +99,21 @@ class Flexipy(object):
         return self.process_response(r, evidence, force_list=True)
 
     def get_evidence_property_list(self, evidence):
-        """Tato funkce vraci seznam polozek danne evidence. Tyto polozky jsou
-        parsovane z Flexibee.
-        :param evidence: identifikuje evidenci jejiz seznam polozek chceme stahnout
-        """
+        """Return FlexiBee property metadata for an evidence."""
         result = {}
         r = self.send_request(method="get", endUrl=evidence + "/properties.json")
         d = r.json()
         return d["properties"]["property"]
 
     def prepare_error_messages(self, e):
-        """Pomocna funkce pro vytvareni chybovych zprav.
-        Tyto chybove zpravy se se prebiraji z odpovedi kterou
-        posila v pripade neuspechu Flexibee.
-        """
+        """Extract error messages from a FlexiBee result payload."""
         error_messages = []
         for error in e:
             error_messages.append(error["message"])
         return error_messages
 
     def process_response(self, response, evidence=None, force_list=False):
-        """Pote co Flexibee vytvori novy zaznam v nejake evidenci, vrati
-        odpoved obsahujici urcite informace. Tato funkce zpracuje odpoved a vratu
-        jeji obsah jako dictionary.	Odstrani take nepotrebne casti.
-        :param response: Response objekt vraceny z Flexibee
-        """
+        """Unwrap a FlexiBee JSON response into its useful payload."""
         if evidence is None:
             d = response.json()
             dictionary = d["winstrom"]
@@ -157,10 +128,7 @@ class Flexipy(object):
                 return list_of_items
 
     def delete_item(self, id, evidence):
-        """Smaze zaznam v evidenci na zaklade id.
-        :param id: identifikuje zaznam(Flexibee identifikator nebo pripadne kod)
-        :param evidence: identifikuje v ktere evidenci se zaznam nachazi
-        """
+        """Delete one item from an evidence by FlexiBee id or code."""
         r = self.send_request(
             method="delete", endUrl=evidence + "/" + str(id) + ".json"
         )
@@ -171,13 +139,7 @@ class Flexipy(object):
                 raise FlexipyException("Neznama chyba.")
 
     def get_evidence_item(self, id, evidence, detail="summary"):
-        """Ziskej zaznam z evidence na zaklade id.
-        Vraci zaznam jako dictionary pro dalsi zpracovani.
-        :param id: id zaznamu(Flexibee identifikator nebo pripadne kod)
-        :param evidence: identifikuje v ktere evidenci se zaznam nachazi
-        :param detail: uroven zobrazeni detailu(kolik polozek daneho zaznamu se vypise)
-        defaultni hodnota je summary. Dalsi moznosi je id(vypise pouze id zaznamu) a full(kompletni vypis)
-        """
+        """Return one evidence item by FlexiBee id or code."""
         r = self.send_request(
             method="get", endUrl=evidence + "/" + str(id) + ".json?detail=" + detail
         )
@@ -191,13 +153,7 @@ class Flexipy(object):
             return dictionary
 
     def get_evidence_item_by_code(self, kod, evidence, detail="summary"):
-        """Ziskej zaznam z evidence na zaklade polozky kod.
-        Vraci zaznam jako dictionary pro dalsi zpracovani.
-        :param kod: kod zaznamu(Flexibee polozka kod)
-        :param evidence: identifikuje v ktere evidenci se zaznam nachazi
-        :param detail: uroven zobrazeni detailu(kolik polozek daneho zaznamu se vypise)
-        defaultni hodnota je summary. Dalsi moznosi je id(vypise pouze id zaznamu) a full(kompletni vypis)
-        """
+        """Return one evidence item by FlexiBee ``kod``."""
         r = self.send_request(
             method="get", endUrl=evidence + "/(kod='" + kod + "').json?detail=" + detail
         )
@@ -205,18 +161,13 @@ class Flexipy(object):
             raise FlexipyException("Neznama chyba.")
         else:
             dictionary = self.process_response(r, evidence=evidence)
-            # pokud neni prazdne
             if dictionary:
                 return dictionary
             else:
                 raise FlexipyException("Zaznam s kodem=" + str(kod) + " nebyl nalezen.")
 
     def create_evidence_item(self, evidence, data):
-        """Privatni funkce pro vytvareni novych zaznamu v evidenci.
-        Returns :tuple skladajici se z (success, result_id, error_message)
-        :param evidence: evidence for new item
-        :param data: JSON reprezebtace dat vytvareneho zaznamu
-        """
+        """Create one evidence item from a raw FlexiBee field dictionary."""
         data = self.prepare_data(evidence, data)
         r = self.send_request(method="put", endUrl=evidence + ".json", payload=data)
         d = self.process_response(r)
@@ -229,12 +180,7 @@ class Flexipy(object):
             return (False, None, error_messages)
 
     def update_evidence_item(self, id, evidence, data):
-        """Function for updating already created evidence item.
-        Returns :tuple consisting of (success, result, error_message)
-        :param id: id(Flexibee identificator) of item to be changed
-        :param evidence: evidence containing item which we want to update(change)
-        :param data: dictionary containing fields which we want to update
-        """
+        """Update one evidence item with a raw FlexiBee field dictionary."""
         data = self.prepare_data(evidence, data)
         r = self.send_request(
             method="put", endUrl=evidence + "/" + str(id) + ".json", payload=data
@@ -249,12 +195,7 @@ class Flexipy(object):
             return (False, None, error_messages)
 
     def validate_params(self, params, evidence):
-        """Tato funkce validuje parametry ktere zadal uzivatel jako dodatecne polozky
-        evidence.
-        V pripade chybi vyhodi FlexipyException
-        :param params: dictionary obsahujici dodatecne polozky
-        :param evidence: typ evidence pro ktery se ma provest validace
-        """
+        """Validate raw FlexiBee field names against evidence metadata."""
         template_dict = self.get_template_dict(evidence, True)
         invalid_params = ""
         for key in params:
@@ -266,27 +207,20 @@ class Flexipy(object):
             )
 
     def get_template_dict(self, evidence, complete=False):
-        """This function creates tepmlate dictionary for evidence.
-        This is usefull for creation of evidence items.
-        :param evidence: evidence for which will be created template
-        :param complete: if True return dict with all params
-        """
+        """Create an empty writable-field template for an evidence."""
         if evidence not in self.conf.get_evidence_list():
             raise ValueError(
                 "evidence arg is valid only for" + str(self.conf.get_evidence_list())
             )
-        # start parsing properties
         property_list = self.get_evidence_property_list(evidence)
         result = {}
         if complete == False:
             for property in property_list:
-                # every property is dictionary
                 if property["isWritable"] == "true" and property["mandatory"] == "true":
                     property_name = property["propertyName"]
                     result[property_name] = ""
         else:
             for property in property_list:
-                # every property is dictionary
                 if property["isWritable"] == "true":
                     property_name = property["propertyName"]
                     result[property_name] = ""
@@ -294,12 +228,7 @@ class Flexipy(object):
         return result
 
     def get_evidence_pdf(self, evidence, id):
-        """Tato funkce vrati pdf evidence s id v argumentu funkce
-        v binary podobe. TODO: checkovat ktere evidence lze takto tisknout
-        Retuns: pdf v binary
-        :params evidence: evidence kterou chceme vytisknout (napr. faktura-vydana)
-        :params id: id evidence
-        """
+        """Return PDF bytes for one printable evidence item."""
         r = self.send_request(method="get", endUrl=evidence + "/" + str(id) + ".pdf")
         if r.status_code not in (200, 201):
             if r.status_code == 404:

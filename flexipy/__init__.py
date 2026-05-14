@@ -1,11 +1,21 @@
 # -*- coding: utf-8 -*-
 
 """
-Knihovna flexipy pro snadnou praci s REST API systemu Flexibee.
-Pro ukazku pouziti se podivejte do dokumentace ve slozce docs.
+Python helpers for working with the FlexiBee REST API.
 
 :copyright: (c) 2012 Jakub Ječmínek.
-:license: BSD, soubor LICENSE obsahuje kopii license.
+:license: BSD, see LICENSE for details.
 """
 
-from .api import Adresar, Banka, Faktura, Pokladna, UcetniOsnova
+from .api import (
+    AddressBook,
+    Adresar,
+    Bank,
+    Banka,
+    CashRegister,
+    ChartOfAccounts,
+    Faktura,
+    Invoice,
+    Pokladna,
+    UcetniOsnova,
+)

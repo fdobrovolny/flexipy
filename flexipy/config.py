@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-Zde se nachazi globalni nastaveni modulu.
-Je treba zde nastavit nektere parametry(viz dokumentace).
-Nektere promene je treba doplnit na zaklade faktickeho
-stavu z Flexibee. Napriklad doplnit typy faktur.
-"""
+"""Configuration helpers for FlexiBee connection and evidence defaults."""
 
 import codecs
 import os
@@ -15,9 +10,7 @@ from importlib import resources
 
 
 class Config(object):
-    """
-    Base config class definuje zakladni metody pro praci s konfiguracnim souborem.
-    """
+    """Read Flexipy configuration from package files, paths, and environment."""
 
     def __init__(self, config_name=None):
         if config_name is None:
@@ -65,10 +58,7 @@ class Config(object):
         return config_name
 
     def get_section_list(self, section_name):
-        """
-        Tato privatni metoda spracuje vsechny sekce v config filu
-        na zaklade jmena sekce a vrati list obsahujici vsechny polozky.
-        """
+        """Return all values from one config section as a list."""
         result_list = []
         try:
             section_content = self.conf.items(section_name)
@@ -79,9 +69,7 @@ class Config(object):
         return result_list
 
     def get_server_config(self):
-        """
-        Tato metoda vrati dict obsahujici vsechna nastaveni tykajici se serveru.
-        """
+        """Return server connection settings as a dictionary."""
         result = {}
         try:
             section_content = self.conf.items("server")
@@ -97,45 +85,67 @@ class Config(object):
     def get_typy_faktury_prijate(self):
         return self.get_section_list("typ_faktury_prijate")
 
+    def get_received_invoice_types(self):
+        return self.get_typy_faktury_prijate()
+
     def get_typy_faktury_vydane(self):
         return self.get_section_list("typ_faktury_vydane")
+
+    def get_issued_invoice_types(self):
+        return self.get_typy_faktury_vydane()
 
     def get_typ_bank_dokladu(self):
         return self.get_section_list("typ_bank_dokladu")
 
+    def get_bank_transaction_types(self):
+        return self.get_typ_bank_dokladu()
+
     def get_typ_pohybu(self):
         return self.get_section_list("typ_pohybu")
+
+    def get_movement_types(self):
+        return self.get_typ_pohybu()
 
     def get_bankovni_ucty(self):
         return self.get_section_list("bankovni_ucty")
 
+    def get_bank_accounts(self):
+        return self.get_bankovni_ucty()
+
     def get_typ_polozky_vydane(self):
         return self.get_section_list("typ_polozky_vydane")
+
+    def get_issued_item_types(self):
+        return self.get_typ_polozky_vydane()
 
     def get_typ_ucetni_operace(self):
         return self.get_section_list("typ_ucetni_operace")
 
+    def get_accounting_operation_types(self):
+        return self.get_typ_ucetni_operace()
+
     def get_typ_pokladni_pohyb(self):
         return self.get_section_list("typ_pokladni_pohyb")
+
+    def get_cash_transaction_types(self):
+        return self.get_typ_pokladni_pohyb()
 
     def get_typ_pokladna(self):
         return self.get_section_list("typ_pokladna")
 
+    def get_cash_register_types(self):
+        return self.get_typ_pokladna()
+
 
 class TestingConfig(Config):
-    """
-    Pro testovani staci vytvorit instanci teto tridy.
-    """
+    """Config using the bundled test FlexiBee settings."""
 
     def __init__(self):
         Config.__init__(self, config_name="flexipy/test_flexipy.conf")
 
 
 class DemoConfig(Config):
-    """
-    Pouzijte tento config pro praci s demo instalaci Flexibee na demo.flexibee.eu
-    Vhodne pro testovani nejnovejsich verzi systemu Flexibee.
-    """
+    """Config using the bundled public demo FlexiBee settings."""
 
     def __init__(self):
         Config.__init__(self, config_name="flexipy/demo_flexibee.conf")

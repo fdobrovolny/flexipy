@@ -12,3 +12,9 @@ from .bank import Banka  # noqa
 from .faktura import Faktura  # noqa
 from .pokladna import Pokladna  # noqa
 from .ucetni_osnova import UcetniOsnova  # noqa
+
+AddressBook = Adresar
+Bank = Banka
+CashRegister = Pokladna
+ChartOfAccounts = UcetniOsnova
+Invoice = Faktura

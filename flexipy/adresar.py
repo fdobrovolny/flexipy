@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json
-
-import requests
-
 from .config import Config
-from .exceptions import FlexipyException
 from .main import Flexipy
 
 
@@ -15,51 +10,77 @@ class Adresar(Flexipy):
             conf = Config()
         Flexipy.__init__(self, config=conf)
 
-    def get_all_adresar(self, query=None, detail="summary", **kwargs):
+    def get_entries(self, query=None, detail="summary", **kwargs):
+        """Return address-book entries from FlexiBee evidence ``adresar``."""
         return self.get_all_records("adresar", query, detail, **kwargs)
 
-    def get_adresar(self, id, detail="summary"):
+    def get_all_adresar(self, query=None, detail="summary", **kwargs):
+        """Backward-compatible alias for :meth:`get_entries`."""
+        return self.get_entries(query, detail, **kwargs)
+
+    def get_entry(self, id, detail="summary"):
+        """Return one address-book entry by FlexiBee id or code."""
         return self.get_evidence_item(id, "adresar", detail)
 
-    def get_adresar_by_code(self, code, detail="summary"):
+    def get_adresar(self, id, detail="summary"):
+        """Backward-compatible alias for :meth:`get_entry`."""
+        return self.get_entry(id, detail)
+
+    def get_entry_by_code(self, code, detail="summary"):
+        """Return one address-book entry by FlexiBee ``kod``."""
         return self.get_evidence_item_by_code(code, "adresar", detail)
 
-    def update_adresar(self, id, adresar):
-        """
-        Tato metoda slouzi k udpatovani obsahu polozky v adresari
-        viz dokumentace
-        :param id: id polozky
-        :parma adresar: dictionary obsahujici zmenene polozky adresare
-        :return tuple obsahujici (success, result, error_message)
-        """
-        return self.update_evidence_item(id, "adresar", adresar)
+    def get_adresar_by_code(self, code, detail="summary"):
+        """Backward-compatible alias for :meth:`get_entry_by_code`."""
+        return self.get_entry_by_code(code, detail)
 
-    def delete_adresar(self, id):
+    def update_entry(self, id, entry):
+        """Update an address-book entry with raw FlexiBee field values."""
+        return self.update_evidence_item(id, "adresar", entry)
+
+    def update_adresar(self, id, adresar):
+        """Backward-compatible alias for :meth:`update_entry`."""
+        return self.update_entry(id, adresar)
+
+    def delete_entry(self, id):
+        """Delete an address-book entry by FlexiBee id or code."""
         self.delete_item(id, "adresar")
 
-    def create_adresar(self, kod, nazev, dalsi_param=None):
-        """Vytvori novy kontakt v adresari Flexibee. Definice evidence se
-        nachazi zde:
-        http://demo.flexibee.eu/c/demo/adresar/properties
-        :param kod: kod adresare
-        :param nazev: nazev firmy nebo kontaktu
-        :param dalsi_param: dalsi nepovinne parametry
+    def delete_adresar(self, id):
+        """Backward-compatible alias for :meth:`delete_entry`."""
+        self.delete_entry(id)
+
+    def create_entry(self, code, name, extra_params=None):
+        """Create an address-book entry.
+
+        ``extra_params`` is passed to FlexiBee as a raw field dictionary, so
+        keys must use FlexiBee field names such as ``email`` or ``mesto``.
         """
-        address_item = {"kod": kod, "nazev": nazev}
-        if dalsi_param is not None:
-            self.validate_params(dalsi_param, "adresar")
-            for key, value in dalsi_param.items():
+        address_item = {"kod": code, "nazev": name}
+        if extra_params is not None:
+            self.validate_params(extra_params, "adresar")
+            for key, value in extra_params.items():
                 address_item[key] = value
         return self.create_evidence_item("adresar", address_item)
+
+    def create_adresar(self, kod, nazev, dalsi_param=None):
+        """Backward-compatible alias for :meth:`create_entry`."""
+        return self.create_entry(code=kod, name=nazev, extra_params=dalsi_param)
+
+    def create_entry_bank_account(
+        self, company, account_number, bank_code, extra_params=None
+    ):
+        """Create a bank-account relation for an address-book entry."""
+        # TODO#
+        return self.create_evidence_item("adresar-bankovni-ucet")
 
     def create_adresar_bank_ucet(
         self, firma, cislo_uctu, kod_banky, dalsi_parametry=None
     ):
-        """Vytvori pro firmu v adresari bankovni spojeni.
-        :param firma: kod firmy pro kterou vytvarime bankovni spojeni
-        :param cislo_uctu: cislo bankovniho uctu
-        :param kod_banky: code banky
-        :dalsi_parametry: dalsi mozne parametry viz dokumentace
-        """
-        # TODO#
-        return self.create_evidence_item("adresar-bankovni-ucet")
+        """Backward-compatible alias for :meth:`create_entry_bank_account`."""
+        return self.create_entry_bank_account(
+            company=firma,
+            account_number=cislo_uctu,
+            bank_code=kod_banky,
+            extra_params=dalsi_parametry,
+        )
