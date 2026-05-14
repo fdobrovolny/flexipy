@@ -15,6 +15,9 @@ class Adresar(Flexipy):
             conf = Config()
         Flexipy.__init__(self, config=conf)
 
+    def get_all_adresar(self, query=None, detail="summary", **kwargs):
+        return self.get_all_records("adresar", query, detail, **kwargs)
+
     def get_adresar(self, id, detail="summary"):
         return self.get_evidence_item(id, "adresar", detail)
 
@@ -39,8 +42,14 @@ class Adresar(Flexipy):
         nachazi zde:
         http://demo.flexibee.eu/c/demo/adresar/properties
         :param kod: kod adresare
+        :param nazev: nazev firmy nebo kontaktu
         :param dalsi_param: dalsi nepovinne parametry
         """
+        address_item = {"kod": kod, "nazev": nazev}
+        if dalsi_param is not None:
+            self.validate_params(dalsi_param, "adresar")
+            for key, value in dalsi_param.items():
+                address_item[key] = value
         return self.create_evidence_item("adresar", address_item)
 
     def create_adresar_bank_ucet(
