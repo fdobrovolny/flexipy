@@ -3,9 +3,10 @@
 """
 Zde se nachazi globalni nastaveni modulu.
 Je treba zde nastavit nektere parametry(viz dokumentace).
-Nektere promene je treba doplnit na zaklade faktickeho 
+Nektere promene je treba doplnit na zaklade faktickeho
 stavu z Flexibee. Napriklad doplnit typy faktur.
 """
+
 import codecs
 import os
 import pathlib

@@ -14,9 +14,7 @@ setup(
     package_data={
         "flexipy": ["flexipy.conf", "test_flexipy.conf", "demo_flexibee.conf"]
     },
-    install_requires=(
-        "requests",
-    ),
+    install_requires=("requests",),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

@@ -40,8 +40,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"flexipy"
-copyright = u"2013, Jakub Ječmínek"
+project = "flexipy"
+copyright = "2013, Jakub Ječmínek"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -181,7 +181,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "flexipy.tex", u"flexipy Documentation", u"Jakub Ječmínek", "manual"),
+    ("index", "flexipy.tex", "flexipy Documentation", "Jakub Ječmínek", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -209,7 +209,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "flexipy", u"flexipy Documentation", [u"Jakub Ječmínek"], 1)]
+man_pages = [("index", "flexipy", "flexipy Documentation", ["Jakub Ječmínek"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -224,8 +224,8 @@ texinfo_documents = [
     (
         "index",
         "flexipy",
-        u"flexipy Documentation",
-        u"Jakub Ječmínek",
+        "flexipy Documentation",
+        "Jakub Ječmínek",
         "flexipy",
         "One line description of project.",
         "Miscellaneous",

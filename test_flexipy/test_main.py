@@ -18,7 +18,9 @@ class TestFlexipy:
         self.password = str(server_settings["password"])
         self.url = str(server_settings["url"])
         try:
-            requests.get(self.url, auth=(self.username, self.password), verify=False, timeout=2)
+            requests.get(
+                self.url, auth=(self.username, self.password), verify=False, timeout=2
+            )
         except requests.exceptions.RequestException:
             pytest.skip("FlexiBee test server is not available")
         self.flexipy = Flexipy(self.conf)
@@ -67,7 +69,7 @@ class TestFlexipy:
         )
 
     def test_get_template_dict(self):
-        expected_result = {u"kod": "", u"nazev": ""}
+        expected_result = {"kod": "", "nazev": ""}
         assert expected_result == self.flexipy.get_template_dict("adresar")
 
     def test_send_request(self):

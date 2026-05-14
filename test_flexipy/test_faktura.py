@@ -15,7 +15,9 @@ class TestFaktura:
         self.password = str(server_settings["password"])
         self.url = str(server_settings["url"])
         try:
-            requests.get(self.url, auth=(self.username, self.password), verify=False, timeout=2)
+            requests.get(
+                self.url, auth=(self.username, self.password), verify=False, timeout=2
+            )
         except requests.exceptions.RequestException:
             pytest.skip("FlexiBee test server is not available")
         self.faktura = Faktura(self.conf)
@@ -110,7 +112,7 @@ class TestFaktura:
         dalsi_param = {
             "popis": "Flexipy test invoice",
             "firma": "code:201",
-            "typUcOp": u"code:TRŽBA SLUŽBY",
+            "typUcOp": "code:TRŽBA SLUŽBY",
         }
         result = self.faktura.create_vydana_faktura(
             kod="flex12",

@@ -13,7 +13,9 @@ class TestBanka:
         self.password = str(server_settings["password"])
         self.url = str(server_settings["url"])
         try:
-            requests.get(self.url, auth=(self.username, self.password), verify=False, timeout=2)
+            requests.get(
+                self.url, auth=(self.username, self.password), verify=False, timeout=2
+            )
         except requests.exceptions.RequestException:
             pytest.skip("FlexiBee test server is not available")
         self.banka = Banka(self.conf)
