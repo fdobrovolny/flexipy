@@ -27,6 +27,15 @@ class Pokladna(Flexipy):
         """
         self.delete_item(id, "pokladni-pohyb")
 
+    def get_pokladni_doklad(self, id, detail="summary"):
+        return self.get_evidence_item(id, "pokladni-pohyb", detail)
+
+    def get_pokladni_doklad_by_code(self, code, detail="summary"):
+        return self.get_evidence_item_by_code(str(code), "pokladni-pohyb", detail)
+
+    def update_pokladni_doklad(self, id, pokladni_item):
+        return self.update_evidence_item(id, "pokladni-pohyb", pokladni_item)
+
     def create_pokladni_doklad(
         self,
         kod,
@@ -35,13 +44,29 @@ class Pokladna(Flexipy):
         typ_dokl=None,
         zdroj_pro_sklad=False,
         typ_pokladna=None,
+        dalsi_param=None,
     ):
         if typ_dokl == None:
-            typ_dokl = self.conf.get_typ_bank_dokladu()[0]
+            typ_dokl = self.conf.get_typ_pokladni_pohyb()[0]
         typ_dokl = "code:" + typ_dokl
         if typ_pohybu == None:
-            typ_pohybu = self.conf.get_typ_pokladni_pohyb()[0]
+            typ_pohybu = self.conf.get_typ_pohybu()[0]
         if typ_pokladna == None:
             typ_pokladna = self.conf.get_typ_pokladna()[0]
         typ_pokladna = "code:" + typ_pokladna
         datum_vyst += "+01:00"
+        p_item = {
+            "kod": kod,
+            "datVyst": datum_vyst,
+            "typDokl": typ_dokl,
+            "typPohybuK": typ_pohybu,
+            "pokladna": typ_pokladna,
+            "zdrojProSkl": zdroj_pro_sklad,
+            "metodaZaokrDoklK": "metodaZaokr.0sazba",
+            "vytvaretKorPol": False,
+        }
+        if dalsi_param is not None:
+            self.validate_params(dalsi_param, "pokladni-pohyb")
+            for key, value in dalsi_param.items():
+                p_item[key] = value
+        return self.create_evidence_item("pokladni-pohyb", p_item)

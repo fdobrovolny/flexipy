@@ -9,3 +9,4 @@ This module implements the flexipy API.
 from .adresar import Adresar  # noqa
 from .bank import Banka  # noqa
 from .faktura import Faktura  # noqa
+from .pokladna import Pokladna  # noqa
