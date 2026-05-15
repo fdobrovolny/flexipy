@@ -2,6 +2,7 @@ import pytest
 import requests
 
 from flexipy import AccountingJournal, config
+from flexipy.exceptions import FlexipyException
 
 
 class TestAccountingJournal:
@@ -53,3 +54,13 @@ class TestAccountingJournal:
     def test_get_entries_for_account_validates_side(self):
         with pytest.raises(ValueError):
             self.journal.get_entries_for_account("343021", side="bad")
+
+    def test_bad_query_raises_flexibee_error_message(self):
+        with pytest.raises(FlexipyException) as exc_info:
+            self.journal.get_journal_entries(query="this is bad", detail="full")
+
+        error = exc_info.value
+        assert error.status_code == 400
+        assert "Špatný formát WQL dotazu" in str(error)
+        assert error.response_json["winstrom"]["success"] == "false"
+        assert error.url.endswith("ucetni-denik/(this%20is%20bad).json?detail=full")

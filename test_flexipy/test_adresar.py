@@ -4,6 +4,7 @@ import pytest
 import requests
 
 from flexipy import Adresar, config
+from flexipy.exceptions import FlexipyException
 
 
 class TestAdresar:
@@ -56,3 +57,21 @@ class TestAdresar:
 
         updated = self.adresar.get_adresar(self.created_id, detail="full")
         assert updated["nazev"] == "Flexipy test address updated"
+
+    def test_update_adresar_rejects_unknown_field(self):
+        code = "FXA" + uuid4().hex[:12].upper()
+
+        result = self.adresar.create_adresar(
+            kod=code,
+            nazev="Flexipy test address",
+        )
+        assert result[0] is True
+        self.created_id = result[1]
+
+        with pytest.raises(FlexipyException) as exc_info:
+            self.adresar.update_adresar(
+                self.created_id,
+                {"fieldThatDoesNotExist": "x"},
+            )
+
+        assert "fieldThatDoesNotExist" in str(exc_info.value)

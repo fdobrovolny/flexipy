@@ -35,22 +35,60 @@ class Flexipy(object):
                 auth=(username, password),
                 verify=verify,
             )
-            if r.status_code == 401:
-                raise FlexipyException("Nemate opravneni provest tuto operaci.")
-            elif r.status_code == 402:
-                raise FlexipyException("Platba vyzadovana, REST API neni aktivni.")
-            elif r.status_code == 403:
-                raise FlexipyException(
-                    "Zakazana operace. Vase licence zrejme neumoznuje tuto operaci."
-                )
-            elif r.status_code == 500:
-                raise FlexipyException(
-                    "Server error, zrejme je neco spatne se serverem na kterem je Flexibee."
-                )
+            self.raise_for_error_response(r)
         except requests.exceptions.ConnectionError as e:
             raise FlexipyException("Connection error " + str(e))
         else:
             return r
+
+    def raise_for_error_response(self, response):
+        """Raise ``FlexipyException`` with FlexiBee error details for failures."""
+        if 200 <= response.status_code < 300:
+            return
+
+        response_json = None
+        try:
+            response_json = response.json()
+        except ValueError:
+            response_json = None
+
+        message, message_code = self.extract_error_message(response_json)
+        if message is None:
+            message = response.text or response.reason or "Neznama chyba."
+
+        raise FlexipyException(
+            message,
+            status_code=response.status_code,
+            message_code=message_code,
+            response_json=response_json,
+            response_text=response.text,
+            url=response.url,
+        )
+
+    def extract_error_message(self, response_json):
+        """Return FlexiBee's best error message and optional message code."""
+        if not isinstance(response_json, dict):
+            return None, None
+
+        winstrom = response_json.get("winstrom")
+        if not isinstance(winstrom, dict):
+            return None, None
+
+        message = winstrom.get("message")
+        message_code = winstrom.get("message@messageCode")
+        if message:
+            return message, message_code
+
+        results = winstrom.get("results") or []
+        messages = []
+        for result in results:
+            for error in result.get("errors", []):
+                if error.get("message"):
+                    messages.append(error["message"])
+        if messages:
+            return "; ".join(messages), message_code
+
+        return None, message_code
 
     def prepare_data(self, evidence, data):
         """Wrap an evidence item in FlexiBee's ``winstrom`` JSON envelope."""
@@ -114,6 +152,7 @@ class Flexipy(object):
 
     def process_response(self, response, evidence=None, force_list=False):
         """Unwrap a FlexiBee JSON response into its useful payload."""
+        self.raise_for_error_response(response)
         if evidence is None:
             d = response.json()
             dictionary = d["winstrom"]
@@ -132,39 +171,26 @@ class Flexipy(object):
         r = self.send_request(
             method="delete", endUrl=evidence + "/" + str(id) + ".json"
         )
-        if r.status_code not in (200, 201):
-            if r.status_code == 404:
-                raise FlexipyException("Zaznam s id=" + str(id) + " nebyl nalezen.")
-            else:
-                raise FlexipyException("Neznama chyba.")
+        self.raise_for_error_response(r)
 
     def get_evidence_item(self, id, evidence, detail="summary"):
         """Return one evidence item by FlexiBee id or code."""
         r = self.send_request(
             method="get", endUrl=evidence + "/" + str(id) + ".json?detail=" + detail
         )
-        if r.status_code not in (200, 201):
-            if r.status_code == 404:
-                raise FlexipyException("Zaznam s id=" + str(id) + " nebyl nalezen.")
-            else:
-                raise FlexipyException("Neznama chyba.")
-        else:
-            dictionary = self.process_response(r, evidence=evidence)
-            return dictionary
+        dictionary = self.process_response(r, evidence=evidence)
+        return dictionary
 
     def get_evidence_item_by_code(self, kod, evidence, detail="summary"):
         """Return one evidence item by FlexiBee ``kod``."""
         r = self.send_request(
             method="get", endUrl=evidence + "/(kod='" + kod + "').json?detail=" + detail
         )
-        if r.status_code not in (200, 201):
-            raise FlexipyException("Neznama chyba.")
+        dictionary = self.process_response(r, evidence=evidence)
+        if dictionary:
+            return dictionary
         else:
-            dictionary = self.process_response(r, evidence=evidence)
-            if dictionary:
-                return dictionary
-            else:
-                raise FlexipyException("Zaznam s kodem=" + str(kod) + " nebyl nalezen.")
+            raise FlexipyException("Zaznam s kodem=" + str(kod) + " nebyl nalezen.")
 
     def create_evidence_item(self, evidence, data):
         """Create one evidence item from a raw FlexiBee field dictionary."""
@@ -181,6 +207,7 @@ class Flexipy(object):
 
     def update_evidence_item(self, id, evidence, data):
         """Update one evidence item with a raw FlexiBee field dictionary."""
+        self.validate_params(data, evidence)
         data = self.prepare_data(evidence, data)
         r = self.send_request(
             method="put", endUrl=evidence + "/" + str(id) + ".json", payload=data
@@ -230,10 +257,5 @@ class Flexipy(object):
     def get_evidence_pdf(self, evidence, id):
         """Return PDF bytes for one printable evidence item."""
         r = self.send_request(method="get", endUrl=evidence + "/" + str(id) + ".pdf")
-        if r.status_code not in (200, 201):
-            if r.status_code == 404:
-                raise FlexipyException("Zaznam s id=" + str(id) + " nebyl nalezen.")
-            else:
-                raise FlexipyException("Neznama chyba.")
-        else:
-            return r.content
+        self.raise_for_error_response(r)
+        return r.content
