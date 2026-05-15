@@ -7,7 +7,12 @@ from flexipy import (
     CashRegister,
     Faktura,
     Invoice,
+    ObratovaPredvaha,
+    Pokladna,
+    TrialBalance,
     UcetniDenik,
+    UcetniOsnova,
+    UcetniStavy,
 )
 
 

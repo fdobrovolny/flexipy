@@ -16,11 +16,11 @@ from .ucetni_denik import UcetniDenik  # noqa
 from .ucetni_osnova import UcetniOsnova  # noqa
 from .ucetni_stavy import UcetniStavy  # noqa
 
-AddressBook = Adresar
 AccountingJournal = UcetniDenik
+AddressBook = Adresar
+AccountBalance = UcetniStavy
 Bank = Banka
 CashRegister = Pokladna
 ChartOfAccounts = UcetniOsnova
 Invoice = Faktura
 TrialBalance = ObratovaPredvaha
-AccountBalance = UcetniStavy
