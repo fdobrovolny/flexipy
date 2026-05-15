@@ -60,3 +60,18 @@ class TestPokladna:
 
         updated = self.pokladna.get_pokladni_doklad(self.created_id, detail="full")
         assert updated["popis"] == "Flexipy pokladna test updated"
+
+    def test_get_cash_sum(self):
+        result = self.pokladna.get_cash_sum()
+        assert isinstance(result, dict)
+        assert "sum" in result
+
+    def test_get_cash_relations(self):
+        result = self.pokladna.get_cash_relations()
+        assert isinstance(result, dict)
+        assert "relations" in result
+
+    def test_get_cash_reports(self):
+        result = self.pokladna.get_cash_reports()
+        assert isinstance(result, dict)
+        assert "reports" in result

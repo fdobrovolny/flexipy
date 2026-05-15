@@ -18,6 +18,18 @@ class Pokladna(Flexipy):
         """Backward-compatible alias for :meth:`get_cash_transactions`."""
         return self.get_cash_transactions(query, detail, **kwargs)
 
+    def get_cash_sum(self, query=None):
+        """Return FlexiBee ``$sum`` for ``pokladni-pohyb``."""
+        return self.get_evidence_sum("pokladni-pohyb", query)
+
+    def get_cash_relations(self):
+        """Return relation metadata for ``pokladni-pohyb``."""
+        return self.get_evidence_relations("pokladni-pohyb")
+
+    def get_cash_reports(self):
+        """Return report metadata for ``pokladni-pohyb``."""
+        return self.get_evidence_reports("pokladni-pohyb")
+
     def delete_cash_transaction(self, id):
         """Delete a cash transaction by FlexiBee id or code."""
         self.delete_item(id, "pokladni-pohyb")

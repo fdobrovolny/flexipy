@@ -47,3 +47,18 @@ class TestBanka:
         bankDoklad = self.banka.get_bank_doklad(id, detail="full")
         assert bankDoklad["varSym"] == str(48152342)
         assert bankDoklad["sumZklZakl"] == "13689.0"
+
+    def test_get_bank_sum(self):
+        result = self.banka.get_bank_sum()
+        assert isinstance(result, dict)
+        assert "sum" in result
+
+    def test_get_bank_relations(self):
+        result = self.banka.get_bank_relations()
+        assert isinstance(result, dict)
+        assert "relations" in result
+
+    def test_get_bank_reports(self):
+        result = self.banka.get_bank_reports()
+        assert isinstance(result, dict)
+        assert "reports" in result

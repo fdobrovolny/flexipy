@@ -254,6 +254,29 @@ class Flexipy(object):
 
         return result
 
+    def get_evidence_sum(self, evidence, query=None):
+        """Return FlexiBee ``$sum`` response for an evidence."""
+        evidence = re.sub(r"\s", "", evidence)
+        if query is None:
+            end = evidence + "/$sum.json"
+        else:
+            end = evidence + "/(" + query + ")/$sum.json"
+        r = self.send_request(method="get", endUrl=end)
+        d = self.process_response(r)
+        return d
+
+    def get_evidence_relations(self, evidence):
+        """Return relation metadata for an evidence."""
+        evidence = re.sub(r"\s", "", evidence)
+        r = self.send_request(method="get", endUrl=evidence + "/relations.json")
+        return r.json()
+
+    def get_evidence_reports(self, evidence):
+        """Return report metadata for an evidence."""
+        evidence = re.sub(r"\s", "", evidence)
+        r = self.send_request(method="get", endUrl=evidence + "/reports.json")
+        return r.json()
+
     def get_evidence_pdf(self, evidence, id):
         """Return PDF bytes for one printable evidence item."""
         r = self.send_request(method="get", endUrl=evidence + "/" + str(id) + ".pdf")

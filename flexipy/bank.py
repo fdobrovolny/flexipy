@@ -132,6 +132,18 @@ class Banka(Flexipy):
         """Backward-compatible alias for :meth:`update_bank_transaction`."""
         return self.update_bank_transaction(id, bank_item)
 
+    def get_bank_sum(self, query=None):
+        """Return FlexiBee ``$sum`` for ``banka``."""
+        return self.get_evidence_sum("banka", query)
+
+    def get_bank_relations(self):
+        """Return relation metadata for ``banka``."""
+        return self.get_evidence_relations("banka")
+
+    def get_bank_reports(self):
+        """Return report metadata for ``banka``."""
+        return self.get_evidence_reports("banka")
+
     def pair_payments(self):
         """Ask FlexiBee to automatically pair payments with invoices."""
         r = self.send_request(method="post", endUrl="banka/automaticke-parovani.json")
