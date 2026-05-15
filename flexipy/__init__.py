@@ -17,6 +17,7 @@ from .api import (
     CashRegister,
     ChartOfAccounts,
     Faktura,
+    Flexipy,
     Invoice,
     ObratovaPredvaha,
     Pokladna,

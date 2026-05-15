@@ -217,6 +217,37 @@ class Flexipy(object):
             error_messages = self.prepare_error_messages(e)
             return (False, None, error_messages)
 
+    def split_document(self, evidence, id, lines):
+        """Rozúčtovat doklad pomocí REST API.
+
+        ``evidence`` je název evidence (např. ``faktura-prijata``).
+        ``id`` je identifikátor dokladu (FlexiBee ``id`` nebo ``kod``).
+        ``lines`` je seznam slovníků, kde každý slovník reprezentuje jeden řádek
+        rozúčtování s parametry jako ``typUcOp``, ``sumZkl``, ``sazbaDph``,
+        ``zklMdUcet``, ``zklDalUcet``, ``clenDph`` atd.
+        """
+        data = {
+            "winstrom": {
+                evidence: {
+                    "rozuctujDoklad": {
+                        "radkyRozuctovani": lines
+                    }
+                }
+            }
+        }
+        payload = json.dumps(data)
+        r = self.send_request(
+            method="put", endUrl=evidence + "/" + str(id) + ".json", payload=payload
+        )
+        d = self.process_response(r)
+        if d.get("success") == "true":
+            returned_id = int(d["results"][0]["id"])
+            return (True, returned_id, None)
+        else:
+            e = d["results"][0]["errors"]
+            error_messages = self.prepare_error_messages(e)
+            return (False, None, error_messages)
+
     def update_evidence_item(self, id, evidence, data):
         """Update one evidence item with a raw FlexiBee field dictionary."""
         self.validate_params(data, evidence)

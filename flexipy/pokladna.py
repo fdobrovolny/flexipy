@@ -108,23 +108,14 @@ class Pokladna(Flexipy):
                 p_item[key] = value
         return self.create_evidence_item("pokladni-pohyb", p_item)
 
-    def create_pokladni_doklad(
-        self,
-        kod,
-        datum_vyst,
-        typ_pohybu=None,
-        typ_dokl=None,
-        zdroj_pro_sklad=False,
-        typ_pokladna=None,
-        dalsi_param=None,
-    ):
-        """Backward-compatible alias for :meth:`create_cash_transaction`."""
-        return self.create_cash_transaction(
-            code=kod,
-            issued_on=datum_vyst,
-            movement_type=typ_pohybu,
-            document_type=typ_dokl,
-            warehouse_source=zdroj_pro_sklad,
-            cash_register_type=typ_pokladna,
-            extra_params=dalsi_param,
-        )
+    def split_cash_transaction(self, id, lines):
+        """Rozúčtovat pokladní pohyb.
+
+        ``lines`` je seznam slovníků s parametry řádků rozúčtování
+        (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
+        """
+        return self.split_document("pokladni-pohyb", id, lines)
+
+    def split_pokladni_doklad(self, id, lines):
+        """Zpětně kompatibilní alias pro :meth:`split_cash_transaction`."""
+        return self.split_cash_transaction(id, lines)

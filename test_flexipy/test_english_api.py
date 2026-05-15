@@ -1,3 +1,5 @@
+import json
+
 from flexipy import (
     AccountingJournal,
     AddressBook,
@@ -166,3 +168,125 @@ def test_invoice_pdf_url_has_public_english_and_legacy_names():
     assert invoice.get_faktura_vydana_pdf_url(42) == invoice.get_issued_invoice_pdf_url(
         42
     )
+
+
+def capture_split_call(client):
+    captured = {}
+
+    def split_document(evidence, id, lines):
+        captured["evidence"] = evidence
+        captured["id"] = id
+        captured["lines"] = lines
+        return True, 42, None
+
+    client.split_document = split_document
+    return captured
+
+
+def test_split_issued_invoice_sends_correct_evidence():
+    invoice = Invoice(FakeConfig())
+    captured = capture_split_call(invoice)
+
+    lines = [
+        {"typUcOp": "code:NÁKUP ZBOŽÍ A", "sumZkl": "75.0"},
+        {"typUcOp": "code:NÁKUP ZBOŽÍ B", "sumZkl": "25.0"},
+    ]
+    invoice.split_issued_invoice(123, lines)
+
+    assert captured["evidence"] == "faktura-vydana"
+    assert captured["id"] == 123
+    assert captured["lines"] == lines
+
+
+def test_split_received_invoice_sends_correct_evidence():
+    invoice = Invoice(FakeConfig())
+    captured = capture_split_call(invoice)
+
+    lines = [{"typUcOp": "code:SLUŽBY", "sumZkl": "100.0"}]
+    invoice.split_received_invoice("FV2023-001", lines)
+
+    assert captured["evidence"] == "faktura-prijata"
+    assert captured["id"] == "FV2023-001"
+    assert captured["lines"] == lines
+
+
+def test_split_bank_transaction_sends_correct_evidence():
+    bank = Bank(FakeConfig())
+    captured = capture_split_call(bank)
+
+    lines = [{"typUcOp": "code:ÚROK", "sumZkl": "50.0"}]
+    bank.split_bank_transaction("B-001", lines)
+
+    assert captured["evidence"] == "banka"
+    assert captured["id"] == "B-001"
+    assert captured["lines"] == lines
+
+
+def test_split_cash_transaction_sends_correct_evidence():
+    cash_register = CashRegister(FakeConfig())
+    captured = capture_split_call(cash_register)
+
+    lines = [{"typUcOp": "code:VÝDAJE", "sumZkl": "200.0"}]
+    cash_register.split_cash_transaction(999, lines)
+
+    assert captured["evidence"] == "pokladni-pohyb"
+    assert captured["id"] == 999
+    assert captured["lines"] == lines
+
+
+def test_split_document_generic_method_builds_payload():
+    """Test that split_document builds correct JSON payload and URL."""
+    from flexipy import Flexipy
+
+    captured_request = {}
+
+    class FakeConfigForSplit:
+        def get_server_config(self):
+            return {
+                "url": "http://localhost:5434/c/demo/",
+                "username": "user",
+                "password": "pass",
+                "verify": "false",
+            }
+
+    client = Flexipy(FakeConfigForSplit())
+
+    def fake_send_request(method, endUrl, payload=""):
+        captured_request["method"] = method
+        captured_request["endUrl"] = endUrl
+        captured_request["payload"] = payload
+        import json
+
+        return MockResponse({
+            "winstrom": {
+                "success": "true",
+                "results": [{"id": 42}]
+            }
+        })
+
+    client.send_request = fake_send_request
+
+    lines = [
+        {"typUcOp": "code:CESTOVNÉ", "sumZkl": "750.0"},
+        {"typUcOp": "code:CESTOVNÉ", "sumZkl": "250.0"},
+    ]
+    result = client.split_document("zavazek", "123", lines)
+
+    assert result == (True, 42, None)
+    assert captured_request["method"] == "put"
+    assert captured_request["endUrl"] == "zavazek/123.json"
+
+    import json
+    payload = json.loads(captured_request["payload"])
+    assert payload["winstrom"]["zavazek"]["rozuctujDoklad"]["radkyRozuctovani"] == lines
+
+
+class MockResponse:
+    def __init__(self, json_data, status_code=200):
+        self._json = json_data
+        self.status_code = status_code
+        self.url = "http://test"
+        self.text = json.dumps(json_data)
+
+    def json(self):
+        return self._json

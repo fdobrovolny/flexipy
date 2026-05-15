@@ -16,6 +16,8 @@ from .ucetni_denik import UcetniDenik  # noqa
 from .ucetni_osnova import UcetniOsnova  # noqa
 from .ucetni_stavy import UcetniStavy  # noqa
 
+from .main import Flexipy  # noqa
+
 AccountingJournal = UcetniDenik
 AddressBook = Adresar
 AccountBalance = UcetniStavy

@@ -273,6 +273,26 @@ class Faktura(Flexipy):
             query="datSplat < now() and zbyvaUhradit > 0", detail="summary", **kwargs
         )
 
-    def get_faktura_vydana_pdf(self, id):
-        """Backward-compatible alias for :meth:`get_issued_invoice_pdf`."""
-        return self.get_issued_invoice_pdf(id)
+    def split_issued_invoice(self, id, lines):
+        """Rozúčtovat vydanou fakturu.
+
+        ``lines`` je seznam slovníků s parametry řádků rozúčtování
+        (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
+        """
+        return self.split_document("faktura-vydana", id, lines)
+
+    def split_vydana_faktura(self, id, lines):
+        """Zpětně kompatibilní alias pro :meth:`split_issued_invoice`."""
+        return self.split_issued_invoice(id, lines)
+
+    def split_received_invoice(self, id, lines):
+        """Rozúčtovat přijatou fakturu.
+
+        ``lines`` je seznam slovníků s parametry řádků rozúčtování
+        (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
+        """
+        return self.split_document("faktura-prijata", id, lines)
+
+    def split_prijata_faktura(self, id, lines):
+        """Zpětně kompatibilní alias pro :meth:`split_received_invoice`."""
+        return self.split_received_invoice(id, lines)

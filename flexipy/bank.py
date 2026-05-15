@@ -201,6 +201,14 @@ class Banka(Flexipy):
         account = self.get_bank_account_by_code(account_code)
         return self.load_bank_records(account["id"], data)
 
-    def do_load_bank_records_by_code(self, account_code, data):
-        """Backward-compatible alias for :meth:`load_bank_records_by_code`."""
-        return self.load_bank_records_by_code(account_code, data)
+    def split_bank_transaction(self, id, lines):
+        """Rozúčtovat bankovní doklad.
+
+        ``lines`` je seznam slovníků s parametry řádků rozúčtování
+        (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
+        """
+        return self.split_document("banka", id, lines)
+
+    def split_bank_doklad(self, id, lines):
+        """Zpětně kompatibilní alias pro :meth:`split_bank_transaction`."""
+        return self.split_bank_transaction(id, lines)
