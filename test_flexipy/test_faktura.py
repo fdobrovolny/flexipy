@@ -143,3 +143,23 @@ class TestFaktura:
         assert actual_polozky["typPolozkyK"] == expected_polozky[0]["typPolozkyK"]
         assert actual_polozky["nazev"] == expected_polozky[0]["nazev"]
         assert actual_polozky["cenaMj"] == expected_polozky[0]["cenaMj"]
+
+    def test_get_unpaid_issued_invoices(self):
+        rows = self.faktura.get_unpaid_issued_invoices(limit=3)
+        assert isinstance(rows, list)
+        for row in rows:
+            assert row["zbyvaUhradit"] != "0.0"
+
+    def test_get_overdue_issued_invoices(self):
+        rows = self.faktura.get_overdue_issued_invoices(limit=3)
+        assert isinstance(rows, list)
+
+    def test_get_unpaid_received_invoices(self):
+        rows = self.faktura.get_unpaid_received_invoices(limit=3)
+        assert isinstance(rows, list)
+        for row in rows:
+            assert row["zbyvaUhradit"] != "0.0"
+
+    def test_get_overdue_received_invoices(self):
+        rows = self.faktura.get_overdue_received_invoices(limit=3)
+        assert isinstance(rows, list)

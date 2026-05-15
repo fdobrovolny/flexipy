@@ -253,6 +253,26 @@ class Faktura(Flexipy):
         """Return issued invoice PDF bytes."""
         return self.get_evidence_pdf("faktura-vydana", id)
 
+    def get_unpaid_issued_invoices(self, **kwargs):
+        return self.get_issued_invoices(
+            query="zbyvaUhradit > 0", detail="summary", **kwargs
+        )
+
+    def get_overdue_issued_invoices(self, **kwargs):
+        return self.get_issued_invoices(
+            query="datSplat < now() and zbyvaUhradit > 0", detail="summary", **kwargs
+        )
+
+    def get_unpaid_received_invoices(self, **kwargs):
+        return self.get_received_invoices(
+            query="zbyvaUhradit > 0", detail="summary", **kwargs
+        )
+
+    def get_overdue_received_invoices(self, **kwargs):
+        return self.get_received_invoices(
+            query="datSplat < now() and zbyvaUhradit > 0", detail="summary", **kwargs
+        )
+
     def get_faktura_vydana_pdf(self, id):
         """Backward-compatible alias for :meth:`get_issued_invoice_pdf`."""
         return self.get_issued_invoice_pdf(id)
