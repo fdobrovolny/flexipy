@@ -80,6 +80,12 @@ class Banka(Flexipy):
         d = self.get_all_records("bankovni-ucet", query, detail, **kwargs)
         return d
 
+    def get_unpaired_bank_transactions(self, **kwargs):
+        """Return unpaired bank transactions."""
+        return self.get_bank_transactions(
+            query="sparovano is false", detail="full", **kwargs
+        )
+
     def get_all_bankovni_ucet(self, query=None, detail="summary", **kwargs):
         """Backward-compatible alias for :meth:`get_bank_accounts`."""
         return self.get_bank_accounts(query, detail, **kwargs)

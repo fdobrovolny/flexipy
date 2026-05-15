@@ -75,3 +75,9 @@ class TestPokladna:
         result = self.pokladna.get_cash_reports()
         assert isinstance(result, dict)
         assert "reports" in result
+
+    def test_get_unpaired_cash_transactions(self):
+        result = self.pokladna.get_unpaired_cash_transactions()
+        assert isinstance(result, list)
+        for item in result:
+            assert item.get("sparovano") in (False, "false", None, "")

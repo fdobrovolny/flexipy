@@ -62,3 +62,9 @@ class TestBanka:
         result = self.banka.get_bank_reports()
         assert isinstance(result, dict)
         assert "reports" in result
+
+    def test_get_unpaired_bank_transactions(self):
+        result = self.banka.get_unpaired_bank_transactions()
+        assert isinstance(result, list)
+        for item in result:
+            assert item.get("sparovano") in (False, "false", None, "")

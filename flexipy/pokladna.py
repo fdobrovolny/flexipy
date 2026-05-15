@@ -14,6 +14,12 @@ class Pokladna(Flexipy):
         """Return cash transactions from FlexiBee evidence ``pokladni-pohyb``."""
         return self.get_all_records("pokladni-pohyb", query, detail, **kwargs)
 
+    def get_unpaired_cash_transactions(self, **kwargs):
+        """Return unpaired cash transactions."""
+        return self.get_cash_transactions(
+            query="sparovano is false", detail="full", **kwargs
+        )
+
     def get_all_pokladni_doklady(self, query=None, detail="summary", **kwargs):
         """Backward-compatible alias for :meth:`get_cash_transactions`."""
         return self.get_cash_transactions(query, detail, **kwargs)

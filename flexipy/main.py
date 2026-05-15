@@ -2,6 +2,7 @@
 
 import json
 import re
+from urllib.parse import urlencode
 
 import requests
 
@@ -90,6 +91,18 @@ class Flexipy(object):
 
         return None, message_code
 
+    def _serialize_query_params(self, params):
+        """Serialize additional query parameters for FlexiBee URLs."""
+        processed = {}
+        for key, value in params.items():
+            if isinstance(value, bool):
+                processed[key] = "true" if value else "false"
+            elif isinstance(value, list):
+                processed[key] = value
+            else:
+                processed[key] = value
+        return "&" + urlencode(processed, doseq=True)
+
     def prepare_data(self, evidence, data):
         """Wrap an evidence item in FlexiBee's ``winstrom`` JSON envelope."""
         winstrom = {"winstrom": {evidence: [data]}}
@@ -102,6 +115,7 @@ class Flexipy(object):
         detail="summary",
         limit=0,
         start=None,
+        params=None,
     ):
         """Return records from a FlexiBee evidence.
 
@@ -111,29 +125,26 @@ class Flexipy(object):
         """
         evidence = re.sub(r"\s", "", evidence)
         if query is None:
-            r = self.send_request(
-                method="get",
-                endUrl=(
-                    evidence
-                    + ".json?detail="
-                    + detail
-                    + (f"&limit={limit}" if limit else "")
-                    + (f"&start={start}" if start else "")
-                ),
+            endUrl = (
+                evidence
+                + ".json?detail="
+                + detail
+                + (f"&limit={limit}" if limit else "")
+                + (f"&start={start}" if start else "")
             )
         else:
-            r = self.send_request(
-                method="get",
-                endUrl=(
-                    evidence
-                    + "/("
-                    + query
-                    + ").json?detail="
-                    + detail
-                    + (f"&limit={limit}" if limit else "")
-                    + (f"&start={start}" if start else "")
-                ),
+            endUrl = (
+                evidence
+                + "/("
+                + query
+                + ").json?detail="
+                + detail
+                + (f"&limit={limit}" if limit else "")
+                + (f"&start={start}" if start else "")
             )
+        if params:
+            endUrl += self._serialize_query_params(params)
+        r = self.send_request(method="get", endUrl=endUrl)
         return self.process_response(r, evidence, force_list=True)
 
     def get_evidence_property_list(self, evidence):
@@ -173,11 +184,12 @@ class Flexipy(object):
         )
         self.raise_for_error_response(r)
 
-    def get_evidence_item(self, id, evidence, detail="summary"):
+    def get_evidence_item(self, id, evidence, detail="summary", params=None):
         """Return one evidence item by FlexiBee id or code."""
-        r = self.send_request(
-            method="get", endUrl=evidence + "/" + str(id) + ".json?detail=" + detail
-        )
+        endUrl = evidence + "/" + str(id) + ".json?detail=" + detail
+        if params:
+            endUrl += self._serialize_query_params(params)
+        r = self.send_request(method="get", endUrl=endUrl)
         dictionary = self.process_response(r, evidence=evidence)
         return dictionary
 
