@@ -30,6 +30,15 @@ class FakeResponse:
         return {"winstrom": {}}
 
 
+class FakeEvidenceResponse(FakeResponse):
+    def __init__(self, evidence, rows=None):
+        self.evidence = evidence
+        self.rows = rows if rows is not None else []
+
+    def json(self):
+        return {"winstrom": {self.evidence: self.rows}}
+
+
 def test_send_request_uses_default_timeout(monkeypatch):
     captured = {}
     client = Flexipy(
@@ -77,6 +86,80 @@ def test_send_request_uses_configured_timeout(monkeypatch):
     client.send_request("get", "adresar.json")
 
     assert captured["timeout"] == 5.5
+
+
+def test_get_all_records_adds_order_parameter():
+    captured = {}
+    client = Flexipy(
+        FakeServerConfig(
+            {
+                "url": "http://example.test/c/demo/",
+                "username": "user",
+                "password": "pass",
+                "verify": "false",
+            }
+        )
+    )
+
+    def fake_send_request(method, endUrl, payload=""):
+        captured["method"] = method
+        captured["endUrl"] = endUrl
+        return FakeEvidenceResponse("adresar")
+
+    client.send_request = fake_send_request
+
+    client.get_all_records("adresar", order="nazev")
+
+    assert captured["method"] == "get"
+    assert captured["endUrl"] == "adresar.json?detail=summary&order=nazev"
+
+
+def test_get_all_records_supports_descending_order():
+    captured = {}
+    client = Flexipy(
+        FakeServerConfig(
+            {
+                "url": "http://example.test/c/demo/",
+                "username": "user",
+                "password": "pass",
+                "verify": "false",
+            }
+        )
+    )
+
+    def fake_send_request(method, endUrl, payload=""):
+        captured["endUrl"] = endUrl
+        return FakeEvidenceResponse("adresar")
+
+    client.send_request = fake_send_request
+
+    client.get_all_records("adresar", order="-nazev")
+
+    assert captured["endUrl"] == "adresar.json?detail=summary&order=nazev%40D"
+
+
+def test_get_all_records_supports_multiple_order_fields():
+    captured = {}
+    client = Flexipy(
+        FakeServerConfig(
+            {
+                "url": "http://example.test/c/demo/",
+                "username": "user",
+                "password": "pass",
+                "verify": "false",
+            }
+        )
+    )
+
+    def fake_send_request(method, endUrl, payload=""):
+        captured["endUrl"] = endUrl
+        return FakeEvidenceResponse("adresar")
+
+    client.send_request = fake_send_request
+
+    client.get_all_records("adresar", order=["kod", "-nazev"])
+
+    assert captured["endUrl"] == "adresar.json?detail=summary&order=kod&order=nazev%40D"
 
 
 class TestFlexipy:

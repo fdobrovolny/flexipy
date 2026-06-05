@@ -109,6 +109,25 @@ class Flexipy(object):
                 processed[key] = value
         return "&" + urlencode(processed, doseq=True)
 
+    def _normalize_order(self, order):
+        """Normalize convenient order syntax to FlexiBee order parameters."""
+        if order is None:
+            return None
+        if isinstance(order, str):
+            orders = [order]
+        else:
+            orders = order
+
+        normalized = []
+        for item in orders:
+            if item.startswith("-"):
+                normalized.append(item[1:] + "@D")
+            elif item.startswith("+"):
+                normalized.append(item[1:] + "@A")
+            else:
+                normalized.append(item)
+        return normalized
+
     def prepare_data(self, evidence, data):
         """Wrap an evidence item in FlexiBee's ``winstrom`` JSON envelope."""
         winstrom = {"winstrom": {evidence: [data]}}
@@ -122,12 +141,14 @@ class Flexipy(object):
         limit=0,
         start=None,
         params=None,
+        order=None,
     ):
         """Return records from a FlexiBee evidence.
 
         ``query`` is a raw FlexiBee filter expression. ``detail`` is passed
         through to FlexiBee, commonly ``summary``, ``id`` or ``full``. ``limit``
-        and ``start`` map to FlexiBee pagination parameters.
+        and ``start`` map to FlexiBee pagination parameters. ``order`` accepts a
+        field name, a list of field names, or ``-field`` for descending order.
         """
         evidence = re.sub(r"\s", "", evidence)
         if query is None:
@@ -148,6 +169,9 @@ class Flexipy(object):
                 + (f"&limit={limit}" if limit else "")
                 + (f"&start={start}" if start else "")
             )
+        order = self._normalize_order(order)
+        if order:
+            endUrl += self._serialize_query_params({"order": order})
         if params:
             endUrl += self._serialize_query_params(params)
         r = self.send_request(method="get", endUrl=endUrl)
