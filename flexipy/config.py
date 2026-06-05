@@ -42,6 +42,8 @@ class Config(object):
             self.conf.set("server", "verify", os.environ.get("FLEXIPY_SSL_VERIFY"))
         if os.environ.get("FLEXIPY_URL", None) is not None:
             self.conf.set("server", "url", os.environ.get("FLEXIPY_URL"))
+        if os.environ.get("FLEXIPY_TIMEOUT", None) is not None:
+            self.conf.set("server", "timeout", os.environ.get("FLEXIPY_TIMEOUT"))
 
     def _resolve_config_path(self, config_name):
         path = pathlib.Path(config_name)

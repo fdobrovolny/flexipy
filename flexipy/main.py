@@ -11,6 +11,8 @@ from .exceptions import FlexipyException
 
 
 class Flexipy(object):
+    DEFAULT_TIMEOUT = 30
+
     def __init__(self, config=None):
         """Create a client with the default config when none is provided."""
         if config is None:
@@ -24,6 +26,7 @@ class Flexipy(object):
             url = str(server_settings["url"])
             username = str(server_settings["username"])
             password = str(server_settings["password"])
+            timeout = float(server_settings.get("timeout", self.DEFAULT_TIMEOUT))
             if str(server_settings["verify"]) == "true":
                 verify = True
             else:
@@ -35,8 +38,11 @@ class Flexipy(object):
                 data=payload,
                 auth=(username, password),
                 verify=verify,
+                timeout=timeout,
             )
             self.raise_for_error_response(r)
+        except requests.exceptions.Timeout as e:
+            raise FlexipyException("Request timeout " + str(e))
         except requests.exceptions.ConnectionError as e:
             raise FlexipyException("Connection error " + str(e))
         else:

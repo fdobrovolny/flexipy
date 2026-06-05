@@ -12,6 +12,73 @@ import pytest
 import json
 
 
+class FakeServerConfig:
+    def __init__(self, server_config):
+        self.server_config = server_config
+
+    def get_server_config(self):
+        return self.server_config
+
+
+class FakeResponse:
+    status_code = 200
+    text = ""
+    reason = "OK"
+    url = "http://test/"
+
+    def json(self):
+        return {"winstrom": {}}
+
+
+def test_send_request_uses_default_timeout(monkeypatch):
+    captured = {}
+    client = Flexipy(
+        FakeServerConfig(
+            {
+                "url": "http://example.test/c/demo/",
+                "username": "user",
+                "password": "pass",
+                "verify": "false",
+            }
+        )
+    )
+
+    def fake_request(**kwargs):
+        captured.update(kwargs)
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "request", fake_request)
+
+    client.send_request("get", "adresar.json")
+
+    assert captured["timeout"] == Flexipy.DEFAULT_TIMEOUT
+
+
+def test_send_request_uses_configured_timeout(monkeypatch):
+    captured = {}
+    client = Flexipy(
+        FakeServerConfig(
+            {
+                "url": "http://example.test/c/demo/",
+                "username": "user",
+                "password": "pass",
+                "verify": "false",
+                "timeout": "5.5",
+            }
+        )
+    )
+
+    def fake_request(**kwargs):
+        captured.update(kwargs)
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "request", fake_request)
+
+    client.send_request("get", "adresar.json")
+
+    assert captured["timeout"] == 5.5
+
+
 class TestFlexipy:
     def setup_method(self):
         # use testing config
