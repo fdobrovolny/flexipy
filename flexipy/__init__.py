@@ -9,6 +9,7 @@ Python helpers for working with the FlexiBee REST API.
 
 from .api import (
     AccountBalance,
+    Account,
     AccountingJournal,
     AddressBook,
     Adresar,
@@ -23,6 +24,7 @@ from .api import (
     Pokladna,
     TrialBalance,
     UcetniDenik,
+    Ucet,
     UcetniOsnova,
     UcetniStavy,
 )

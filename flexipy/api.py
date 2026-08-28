@@ -14,6 +14,7 @@ from .obratova_predvaha import ObratovaPredvaha  # noqa
 from .pokladna import Pokladna  # noqa
 from .ucetni_denik import UcetniDenik  # noqa
 from .ucetni_osnova import UcetniOsnova  # noqa
+from .ucet import Ucet  # noqa
 from .ucetni_stavy import UcetniStavy  # noqa
 
 from .main import Flexipy  # noqa
@@ -26,3 +27,4 @@ CashRegister = Pokladna
 ChartOfAccounts = UcetniOsnova
 Invoice = Faktura
 TrialBalance = ObratovaPredvaha
+Account = Ucet
