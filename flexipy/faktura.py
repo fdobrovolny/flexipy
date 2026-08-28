@@ -221,9 +221,7 @@ class Faktura(Flexipy):
         return self.get_received_invoice_by_code(code, detail)
 
     def __get_faktura_pdf_url(self, faktura_typ, id):
-        server_settings = self.conf.get_server_config()
-        url = str(server_settings["url"])
-        return url + faktura_typ + "/" + str(id) + ".pdf"
+        return self.build_url(faktura_typ + "/" + str(id) + ".pdf")
 
     def get_invoice_pdf_url(self, invoice_type, id):
         """Return the PDF URL for a raw FlexiBee invoice evidence name."""

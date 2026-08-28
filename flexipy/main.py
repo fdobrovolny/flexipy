@@ -2,7 +2,7 @@
 
 import json
 import re
-from urllib.parse import urlencode
+from urllib.parse import urljoin
 
 import requests
 
@@ -19,11 +19,16 @@ class Flexipy(object):
             config = config_module.Config()
         self.conf = config
 
-    def send_request(self, method, endUrl, payload=""):
+    def build_url(self, endUrl):
+        """Build an absolute FlexiBee URL from a relative endpoint."""
+        server_settings = self.conf.get_server_config()
+        base_url = str(server_settings["url"]).rstrip("/") + "/"
+        return urljoin(base_url, str(endUrl).lstrip("/"))
+
+    def send_request(self, method, endUrl, payload="", params=None):
         """Send one HTTP request to the configured FlexiBee server."""
         try:
             server_settings = self.conf.get_server_config()
-            url = str(server_settings["url"])
             username = str(server_settings["username"])
             password = str(server_settings["password"])
             timeout = float(server_settings.get("timeout", self.DEFAULT_TIMEOUT))
@@ -34,7 +39,8 @@ class Flexipy(object):
 
             r = requests.request(
                 method=method,
-                url=str(url) + endUrl,
+                url=self.build_url(endUrl),
+                params=self._prepare_query_params(params),
                 data=payload,
                 auth=(username, password),
                 verify=verify,
@@ -97,17 +103,22 @@ class Flexipy(object):
 
         return None, message_code
 
-    def _serialize_query_params(self, params):
-        """Serialize additional query parameters for FlexiBee URLs."""
+    def _prepare_query_params(self, params):
+        """Normalize query parameters before handing them to requests."""
+        if not params:
+            return None
+
         processed = {}
         for key, value in params.items():
+            if value is None or value == "":
+                continue
             if isinstance(value, bool):
                 processed[key] = "true" if value else "false"
             elif isinstance(value, list):
                 processed[key] = value
             else:
                 processed[key] = value
-        return "&" + urlencode(processed, doseq=True)
+        return processed or None
 
     def _normalize_order(self, order):
         """Normalize convenient order syntax to FlexiBee order parameters."""
@@ -151,30 +162,21 @@ class Flexipy(object):
         field name, a list of field names, or ``-field`` for descending order.
         """
         evidence = re.sub(r"\s", "", evidence)
+        request_params = {"detail": detail}
+        if limit:
+            request_params["limit"] = limit
+        if start:
+            request_params["start"] = start
         if query is None:
-            endUrl = (
-                evidence
-                + ".json?detail="
-                + detail
-                + (f"&limit={limit}" if limit else "")
-                + (f"&start={start}" if start else "")
-            )
+            endUrl = evidence + ".json"
         else:
-            endUrl = (
-                evidence
-                + "/("
-                + query
-                + ").json?detail="
-                + detail
-                + (f"&limit={limit}" if limit else "")
-                + (f"&start={start}" if start else "")
-            )
+            endUrl = evidence + "/(" + query + ").json"
         order = self._normalize_order(order)
         if order:
-            endUrl += self._serialize_query_params({"order": order})
+            request_params["order"] = order
         if params:
-            endUrl += self._serialize_query_params(params)
-        r = self.send_request(method="get", endUrl=endUrl)
+            request_params.update(params)
+        r = self.send_request(method="get", endUrl=endUrl, params=request_params)
         return self.process_response(r, evidence, force_list=True)
 
     def get_evidence_property_list(self, evidence):
@@ -216,17 +218,20 @@ class Flexipy(object):
 
     def get_evidence_item(self, id, evidence, detail="summary", params=None):
         """Return one evidence item by FlexiBee id or code."""
-        endUrl = evidence + "/" + str(id) + ".json?detail=" + detail
+        request_params = {"detail": detail}
         if params:
-            endUrl += self._serialize_query_params(params)
-        r = self.send_request(method="get", endUrl=endUrl)
+            request_params.update(params)
+        endUrl = evidence + "/" + str(id) + ".json"
+        r = self.send_request(method="get", endUrl=endUrl, params=request_params)
         dictionary = self.process_response(r, evidence=evidence)
         return dictionary
 
     def get_evidence_item_by_code(self, kod, evidence, detail="summary"):
         """Return one evidence item by FlexiBee ``kod``."""
         r = self.send_request(
-            method="get", endUrl=evidence + "/(kod='" + kod + "').json?detail=" + detail
+            method="get",
+            endUrl=evidence + "/(kod='" + kod + "').json",
+            params={"detail": detail},
         )
         dictionary = self.process_response(r, evidence=evidence)
         if dictionary:
