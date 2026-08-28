@@ -60,13 +60,15 @@ class Pokladna(Flexipy):
         """Backward-compatible alias for :meth:`get_cash_transaction_by_code`."""
         return self.get_cash_transaction_by_code(code, detail)
 
-    def update_cash_transaction(self, id, cash_item):
+    def update_cash_transaction(self, id, cash_item, dry_run=False):
         """Update a cash transaction with raw FlexiBee field values."""
-        return self.update_evidence_item(id, "pokladni-pohyb", cash_item)
+        return self.update_evidence_item(
+            id, "pokladni-pohyb", cash_item, dry_run=dry_run
+        )
 
-    def update_pokladni_doklad(self, id, pokladni_item):
+    def update_pokladni_doklad(self, id, pokladni_item, dry_run=False):
         """Backward-compatible alias for :meth:`update_cash_transaction`."""
-        return self.update_cash_transaction(id, pokladni_item)
+        return self.update_cash_transaction(id, pokladni_item, dry_run=dry_run)
 
     def create_cash_transaction(
         self,
@@ -77,6 +79,7 @@ class Pokladna(Flexipy):
         warehouse_source=False,
         cash_register_type=None,
         extra_params=None,
+        dry_run=False,
     ):
         """Create a cash transaction.
 
@@ -106,7 +109,7 @@ class Pokladna(Flexipy):
             self.validate_params(extra_params, "pokladni-pohyb")
             for key, value in extra_params.items():
                 p_item[key] = value
-        return self.create_evidence_item("pokladni-pohyb", p_item)
+        return self.create_evidence_item("pokladni-pohyb", p_item, dry_run=dry_run)
 
     def create_pokladni_doklad(
         self,
@@ -117,6 +120,7 @@ class Pokladna(Flexipy):
         zdroj_pro_sklad=False,
         typ_pokladna=None,
         dalsi_param=None,
+        dry_run=False,
     ):
         """Backward-compatible alias for :meth:`create_cash_transaction`."""
         return self.create_cash_transaction(
@@ -127,16 +131,17 @@ class Pokladna(Flexipy):
             warehouse_source=zdroj_pro_sklad,
             cash_register_type=typ_pokladna,
             extra_params=dalsi_param,
+            dry_run=dry_run,
         )
 
-    def split_cash_transaction(self, id, lines):
+    def split_cash_transaction(self, id, lines, dry_run=False):
         """Rozúčtovat pokladní pohyb.
 
         ``lines`` je seznam slovníků s parametry řádků rozúčtování
         (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
         """
-        return self.split_document("pokladni-pohyb", id, lines)
+        return self.split_document("pokladni-pohyb", id, lines, dry_run=dry_run)
 
-    def split_pokladni_doklad(self, id, lines):
+    def split_pokladni_doklad(self, id, lines, dry_run=False):
         """Zpětně kompatibilní alias pro :meth:`split_cash_transaction`."""
-        return self.split_cash_transaction(id, lines)
+        return self.split_cash_transaction(id, lines, dry_run=dry_run)

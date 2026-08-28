@@ -34,13 +34,13 @@ class Adresar(Flexipy):
         """Backward-compatible alias for :meth:`get_entry_by_code`."""
         return self.get_entry_by_code(code, detail)
 
-    def update_entry(self, id, entry):
+    def update_entry(self, id, entry, dry_run=False):
         """Update an address-book entry with raw FlexiBee field values."""
-        return self.update_evidence_item(id, "adresar", entry)
+        return self.update_evidence_item(id, "adresar", entry, dry_run=dry_run)
 
-    def update_adresar(self, id, adresar):
+    def update_adresar(self, id, adresar, dry_run=False):
         """Backward-compatible alias for :meth:`update_entry`."""
-        return self.update_entry(id, adresar)
+        return self.update_entry(id, adresar, dry_run=dry_run)
 
     def delete_entry(self, id):
         """Delete an address-book entry by FlexiBee id or code."""
@@ -50,7 +50,7 @@ class Adresar(Flexipy):
         """Backward-compatible alias for :meth:`delete_entry`."""
         self.delete_entry(id)
 
-    def create_entry(self, code, name, extra_params=None):
+    def create_entry(self, code, name, extra_params=None, dry_run=False):
         """Create an address-book entry.
 
         ``extra_params`` is passed to FlexiBee as a raw field dictionary, so
@@ -61,21 +61,24 @@ class Adresar(Flexipy):
             self.validate_params(extra_params, "adresar")
             for key, value in extra_params.items():
                 address_item[key] = value
-        return self.create_evidence_item("adresar", address_item)
+        return self.create_evidence_item("adresar", address_item, dry_run=dry_run)
 
-    def create_adresar(self, kod, nazev, dalsi_param=None):
+    def create_adresar(self, kod, nazev, dalsi_param=None, dry_run=False):
         """Backward-compatible alias for :meth:`create_entry`."""
-        return self.create_entry(code=kod, name=nazev, extra_params=dalsi_param)
+        return self.create_entry(
+            code=kod, name=nazev, extra_params=dalsi_param, dry_run=dry_run
+        )
 
     def create_entry_bank_account(
-        self, company, account_number, bank_code, extra_params=None
+        self, company, account_number, bank_code, extra_params=None, dry_run=False
     ):
         """Create a bank-account relation for an address-book entry."""
-        # TODO#
-        return self.create_evidence_item("adresar-bankovni-ucet")
+        # TODO: Implement bank-account relation creation.
+        # return self.create_evidence_item("adresar-bankovni-ucet", {}, dry_run=dry_run)
+        raise NotImplementedError("Address-book bank account creation is not implemented")
 
     def create_adresar_bank_ucet(
-        self, firma, cislo_uctu, kod_banky, dalsi_parametry=None
+        self, firma, cislo_uctu, kod_banky, dalsi_parametry=None, dry_run=False
     ):
         """Backward-compatible alias for :meth:`create_entry_bank_account`."""
         return self.create_entry_bank_account(
@@ -83,4 +86,5 @@ class Adresar(Flexipy):
             account_number=cislo_uctu,
             bank_code=kod_banky,
             extra_params=dalsi_parametry,
+            dry_run=dry_run,
         )

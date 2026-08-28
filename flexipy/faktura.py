@@ -35,6 +35,7 @@ class Faktura(Flexipy):
         document_type=None,
         extra_params=None,
         invoice_items=None,
+        dry_run=False,
     ):
         """Create an issued invoice.
 
@@ -64,7 +65,7 @@ class Faktura(Flexipy):
                 self.validate_params(it, "faktura-vydana-polozka")
                 inv_items.append(it)
             invoice["polozkyFaktury"] = inv_items
-        return self.create_evidence_item("faktura-vydana", invoice)
+        return self.create_evidence_item("faktura-vydana", invoice, dry_run=dry_run)
 
     def create_vydana_faktura(
         self,
@@ -75,6 +76,7 @@ class Faktura(Flexipy):
         typ_dokl=None,
         dalsi_param=None,
         polozky_faktury=None,
+        dry_run=False,
     ):
         """Backward-compatible alias for :meth:`create_issued_invoice`."""
         return self.create_issued_invoice(
@@ -85,6 +87,7 @@ class Faktura(Flexipy):
             document_type=typ_dokl,
             extra_params=dalsi_param,
             invoice_items=polozky_faktury,
+            dry_run=dry_run,
         )
 
     def create_received_invoice(
@@ -98,6 +101,7 @@ class Faktura(Flexipy):
         document_type=None,
         extra_params=None,
         invoice_items=None,
+        dry_run=False,
     ):
         """Create a received invoice.
 
@@ -129,7 +133,7 @@ class Faktura(Flexipy):
                 self.validate_params(it, "faktura-prijata-polozka")
                 inv_items.append(it)
             invoice["polozkyFaktury"] = inv_items
-        return self.create_evidence_item("faktura-prijata", invoice)
+        return self.create_evidence_item("faktura-prijata", invoice, dry_run=dry_run)
 
     def create_prijata_faktura(
         self,
@@ -142,6 +146,7 @@ class Faktura(Flexipy):
         typ_dokl=None,
         dalsi_param=None,
         polozky_faktury=None,
+        dry_run=False,
     ):
         """Backward-compatible alias for :meth:`create_received_invoice`."""
         return self.create_received_invoice(
@@ -154,23 +159,28 @@ class Faktura(Flexipy):
             document_type=typ_dokl,
             extra_params=dalsi_param,
             invoice_items=polozky_faktury,
+            dry_run=dry_run,
         )
 
-    def update_issued_invoice(self, id, invoice):
+    def update_issued_invoice(self, id, invoice, dry_run=False):
         """Update an issued invoice with raw FlexiBee field values."""
-        return self.update_evidence_item(id, "faktura-vydana", invoice)
+        return self.update_evidence_item(
+            id, "faktura-vydana", invoice, dry_run=dry_run
+        )
 
-    def update_vydana_faktura(self, id, invoice):
+    def update_vydana_faktura(self, id, invoice, dry_run=False):
         """Backward-compatible alias for :meth:`update_issued_invoice`."""
-        return self.update_issued_invoice(id, invoice)
+        return self.update_issued_invoice(id, invoice, dry_run=dry_run)
 
-    def update_received_invoice(self, id, invoice):
+    def update_received_invoice(self, id, invoice, dry_run=False):
         """Update a received invoice with raw FlexiBee field values."""
-        return self.update_evidence_item(id, "faktura-prijata", invoice)
+        return self.update_evidence_item(
+            id, "faktura-prijata", invoice, dry_run=dry_run
+        )
 
-    def update_prijata_faktura(self, id, invoice):
+    def update_prijata_faktura(self, id, invoice, dry_run=False):
         """Backward-compatible alias for :meth:`update_received_invoice`."""
-        return self.update_received_invoice(id, invoice)
+        return self.update_received_invoice(id, invoice, dry_run=dry_run)
 
     def delete_issued_invoice(self, id):
         """Delete an issued invoice by FlexiBee id or code."""
@@ -271,26 +281,26 @@ class Faktura(Flexipy):
             query="datSplat < now() and zbyvaUhradit > 0", detail="summary", **kwargs
         )
 
-    def split_issued_invoice(self, id, lines):
+    def split_issued_invoice(self, id, lines, dry_run=False):
         """Rozúčtovat vydanou fakturu.
 
         ``lines`` je seznam slovníků s parametry řádků rozúčtování
         (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
         """
-        return self.split_document("faktura-vydana", id, lines)
+        return self.split_document("faktura-vydana", id, lines, dry_run=dry_run)
 
-    def split_vydana_faktura(self, id, lines):
+    def split_vydana_faktura(self, id, lines, dry_run=False):
         """Zpětně kompatibilní alias pro :meth:`split_issued_invoice`."""
-        return self.split_issued_invoice(id, lines)
+        return self.split_issued_invoice(id, lines, dry_run=dry_run)
 
-    def split_received_invoice(self, id, lines):
+    def split_received_invoice(self, id, lines, dry_run=False):
         """Rozúčtovat přijatou fakturu.
 
         ``lines`` je seznam slovníků s parametry řádků rozúčtování
         (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
         """
-        return self.split_document("faktura-prijata", id, lines)
+        return self.split_document("faktura-prijata", id, lines, dry_run=dry_run)
 
-    def split_prijata_faktura(self, id, lines):
+    def split_prijata_faktura(self, id, lines, dry_run=False):
         """Zpětně kompatibilní alias pro :meth:`split_received_invoice`."""
-        return self.split_received_invoice(id, lines)
+        return self.split_received_invoice(id, lines, dry_run=dry_run)

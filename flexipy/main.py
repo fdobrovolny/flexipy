@@ -144,6 +144,19 @@ class Flexipy(object):
         winstrom = {"winstrom": {evidence: [data]}}
         return json.dumps(winstrom)
 
+    def _extract_result_id(self, response_payload, evidence=None):
+        """Return saved id from normal or dry-run FlexiBee write responses."""
+        result = response_payload["results"][0]
+        if "id" in result:
+            return int(result["id"])
+        if evidence is not None and "content" in result:
+            content = result["content"].get(evidence)
+            if isinstance(content, list) and content:
+                return int(content[0]["id"])
+            if isinstance(content, dict) and "id" in content:
+                return int(content["id"])
+        return None
+
     def get_all_records(
         self,
         evidence,
@@ -239,20 +252,25 @@ class Flexipy(object):
         else:
             raise FlexipyException("Zaznam s kodem=" + str(kod) + " nebyl nalezen.")
 
-    def create_evidence_item(self, evidence, data):
+    def create_evidence_item(self, evidence, data, dry_run=False):
         """Create one evidence item from a raw FlexiBee field dictionary."""
         data = self.prepare_data(evidence, data)
-        r = self.send_request(method="put", endUrl=evidence + ".json", payload=data)
+        r = self.send_request(
+            method="put",
+            endUrl=evidence + ".json",
+            payload=data,
+            params={"dry-run": True} if dry_run else None,
+        )
         d = self.process_response(r)
         if d["success"] == "true":
-            id = int(d["results"][0]["id"])
+            id = self._extract_result_id(d, evidence)
             return (True, id, None)
         else:
             e = d["results"][0]["errors"]
             error_messages = self.prepare_error_messages(e)
             return (False, None, error_messages)
 
-    def split_document(self, evidence, id, lines):
+    def split_document(self, evidence, id, lines, dry_run=False):
         """Rozúčtovat doklad pomocí REST API.
 
         ``evidence`` je název evidence (např. ``faktura-prijata``).
@@ -272,27 +290,33 @@ class Flexipy(object):
         }
         payload = json.dumps(data)
         r = self.send_request(
-            method="put", endUrl=evidence + "/" + str(id) + ".json", payload=payload
+            method="put",
+            endUrl=evidence + "/" + str(id) + ".json",
+            payload=payload,
+            params={"dry-run": True} if dry_run else None,
         )
         d = self.process_response(r)
         if d.get("success") == "true":
-            returned_id = int(d["results"][0]["id"])
+            returned_id = self._extract_result_id(d, evidence)
             return (True, returned_id, None)
         else:
             e = d["results"][0]["errors"]
             error_messages = self.prepare_error_messages(e)
             return (False, None, error_messages)
 
-    def update_evidence_item(self, id, evidence, data):
+    def update_evidence_item(self, id, evidence, data, dry_run=False):
         """Update one evidence item with a raw FlexiBee field dictionary."""
         self.validate_params(data, evidence)
         data = self.prepare_data(evidence, data)
         r = self.send_request(
-            method="put", endUrl=evidence + "/" + str(id) + ".json", payload=data
+            method="put",
+            endUrl=evidence + "/" + str(id) + ".json",
+            payload=data,
+            params={"dry-run": True} if dry_run else None,
         )
         d = self.process_response(r)
         if d["success"] == "true":
-            id = int(d["results"][0]["id"])
+            id = self._extract_result_id(d, evidence)
             return (True, id, None)
         else:
             e = d["results"][0]["errors"]

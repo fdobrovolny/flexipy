@@ -20,6 +20,7 @@ class Banka(Flexipy):
         movement_type=None,
         bank_account=None,
         extra_params=None,
+        dry_run=False,
     ):
         """Create a bank transaction.
 
@@ -45,7 +46,7 @@ class Banka(Flexipy):
             self.validate_params(extra_params, "banka")
             for k, v in extra_params.items():
                 b_item[k] = v
-        return self.create_evidence_item("banka", b_item)
+        return self.create_evidence_item("banka", b_item, dry_run=dry_run)
 
     def create_bank_doklad(
         self,
@@ -55,6 +56,7 @@ class Banka(Flexipy):
         typ_pohybu=None,
         bank_ucet=None,
         dalsi_param=None,
+        dry_run=False,
     ):
         """Backward-compatible alias for :meth:`create_bank_transaction`."""
         return self.create_bank_transaction(
@@ -64,6 +66,7 @@ class Banka(Flexipy):
             movement_type=typ_pohybu,
             bank_account=bank_ucet,
             extra_params=dalsi_param,
+            dry_run=dry_run,
         )
 
     def get_bank_transactions(self, query=None, detail="summary", **kwargs):
@@ -130,13 +133,13 @@ class Banka(Flexipy):
         """Backward-compatible alias for :meth:`delete_bank_transaction`."""
         self.delete_bank_transaction(id)
 
-    def update_bank_transaction(self, id, bank_item):
+    def update_bank_transaction(self, id, bank_item, dry_run=False):
         """Update a bank transaction with raw FlexiBee field values."""
-        return self.update_evidence_item(id, "banka", bank_item)
+        return self.update_evidence_item(id, "banka", bank_item, dry_run=dry_run)
 
-    def update_bank_doklad(self, id, bank_item):
+    def update_bank_doklad(self, id, bank_item, dry_run=False):
         """Backward-compatible alias for :meth:`update_bank_transaction`."""
-        return self.update_bank_transaction(id, bank_item)
+        return self.update_bank_transaction(id, bank_item, dry_run=dry_run)
 
     def get_bank_sum(self, query=None):
         """Return FlexiBee ``$sum`` for ``banka``."""
@@ -201,14 +204,14 @@ class Banka(Flexipy):
         account = self.get_bank_account_by_code(account_code)
         return self.load_bank_records(account["id"], data)
 
-    def split_bank_transaction(self, id, lines):
+    def split_bank_transaction(self, id, lines, dry_run=False):
         """Rozúčtovat bankovní doklad.
 
         ``lines`` je seznam slovníků s parametry řádků rozúčtování
         (``typUcOp``, ``sumZkl``, ``sazbaDph``, ``zklMdUcet`` atd.).
         """
-        return self.split_document("banka", id, lines)
+        return self.split_document("banka", id, lines, dry_run=dry_run)
 
-    def split_bank_doklad(self, id, lines):
+    def split_bank_doklad(self, id, lines, dry_run=False):
         """Zpětně kompatibilní alias pro :meth:`split_bank_transaction`."""
-        return self.split_bank_transaction(id, lines)
+        return self.split_bank_transaction(id, lines, dry_run=dry_run)
